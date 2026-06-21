@@ -3,7 +3,7 @@
     "id": 101,
     "cert": "professional",
     "domain": "Section 1: Experimentation",
-    "question": "You are engineering features from a time-series dataset. Your label is customer churn in month T. Feature candidates include account balance, login frequency, and support tickets — all measured monthly. What is the critical issue to verify before using these features, and how do you fix it?",
+    "question": "You are engineering features from a time-series dataset. Your label is customer churn in month T. Feature candidates include account balance, login frequency, and support tickets \u2014 all measured monthly. What is the critical issue to verify before using these features, and how do you fix it?",
     "options": [
       "All time-series features introduce multicollinearity; use PCA to remove correlated signals.",
       "Features measured at or after month T may introduce data leakage: the model would see future information not available at prediction time. Use only feature values from months T-1 and earlier; use Feature Store point-in-time lookups to enforce this cutoff.",
@@ -17,15 +17,15 @@
     "id": 102,
     "cert": "professional",
     "domain": "Section 1: Experimentation",
-    "question": "A team wants to reproduce an experiment run from 3 months ago exactly — same data snapshot, same code, same parameters. What Databricks and MLflow mechanisms enable full reproducibility?",
+    "question": "A team wants to reproduce an experiment run from 3 months ago exactly \u2014 same data snapshot, same code, same parameters. What Databricks and MLflow mechanisms enable full reproducibility?",
     "options": [
       "MLflow logs are immutable; simply load the model artifact and re-run .predict() on current data.",
       "Use Delta Lake time travel (`VERSION AS OF` or `TIMESTAMP AS OF`) to retrieve the exact data snapshot used at training time, combine with the MLflow run's logged parameters and linked source code commit (from Databricks Repos), and re-run the experiment notebook.",
       "Store the training dataset as a CSV artifact in the MLflow run and load it for re-training.",
-      "Pin the cluster's Databricks Runtime version and re-run the notebook — the ML Runtime ensures identical library versions across runs."
+      "Pin the cluster's Databricks Runtime version and re-run the notebook \u2014 the ML Runtime ensures identical library versions across runs."
     ],
     "answer": 1,
-    "explanation": "Full reproducibility requires: (1) Delta Lake time travel to get the exact data version at training time (MLflow can log the Delta table version); (2) MLflow-logged parameters and metrics; (3) Git commit hash (MLflow logs `mlflow.source.git.commit` when running in Databricks Repos). Runtime pinning helps but is insufficient alone — data drift across re-queries is the primary reproducibility threat."
+    "explanation": "Full reproducibility requires: (1) Delta Lake time travel to get the exact data version at training time (MLflow can log the Delta table version); (2) MLflow-logged parameters and metrics; (3) Git commit hash (MLflow logs `mlflow.source.git.commit` when running in Databricks Repos). Runtime pinning helps but is insufficient alone \u2014 data drift across re-queries is the primary reproducibility threat."
   },
   {
     "id": 103,
@@ -53,7 +53,7 @@
       "SHAP values are only valid for tree-based models and cannot be used for feature selection in neural networks."
     ],
     "answer": 1,
-    "explanation": "A SHAP value for feature j in prediction i represents how much feature j contributed to pushing the prediction from the baseline (mean prediction) to the actual prediction for that sample. Mean |SHAP| across training samples gives a global feature importance that is model-agnostic and theoretically grounded. Features with mean |SHAP| ≈ 0 contribute nothing and can be safely removed."
+    "explanation": "A SHAP value for feature j in prediction i represents how much feature j contributed to pushing the prediction from the baseline (mean prediction) to the actual prediction for that sample. Mean |SHAP| across training samples gives a global feature importance that is model-agnostic and theoretically grounded. Features with mean |SHAP| \u2248 0 contribute nothing and can be safely removed."
   },
   {
     "id": 105,
@@ -76,7 +76,7 @@
     "question": "You need to perform distributed hyperparameter optimization using Ray Tune on a Databricks cluster. How does Ray Tune compare to Hyperopt SparkTrials for Databricks-native integration?",
     "options": [
       "Ray Tune and Hyperopt SparkTrials are identical; both use the same Spark task scheduling backend.",
-      "Hyperopt SparkTrials is the native Databricks integration — it uses Spark tasks directly. Ray Tune requires setting up a Ray cluster separately (using ray.init() with the Spark cluster's head node address), adding operational overhead but providing more advanced scheduling algorithms (ASHA, PBT).",
+      "Hyperopt SparkTrials is the native Databricks integration \u2014 it uses Spark tasks directly. Ray Tune requires setting up a Ray cluster separately (using ray.init() with the Spark cluster's head node address), adding operational overhead but providing more advanced scheduling algorithms (ASHA, PBT).",
       "Ray Tune is the recommended tool for Databricks because it integrates with Databricks ML Runtime out-of-the-box with zero configuration.",
       "Ray Tune can only be used with TensorFlow models; Hyperopt SparkTrials is required for scikit-learn."
     ],
@@ -90,12 +90,12 @@
     "question": "A model trained on last year's data shows strong validation performance but degrades significantly in production after 2 months. What type of problem is this, and what is the long-term mitigation strategy?",
     "options": [
       "This is overfitting. Reduce model complexity and retrain with stronger regularization.",
-      "This is concept drift — the statistical relationship between features and the target has changed over time as real-world behavior evolves. Mitigate by implementing continuous model monitoring (tracking prediction distribution and model performance), and automating retraining triggers when drift is detected.",
+      "This is concept drift \u2014 the statistical relationship between features and the target has changed over time as real-world behavior evolves. Mitigate by implementing continuous model monitoring (tracking prediction distribution and model performance), and automating retraining triggers when drift is detected.",
       "This is training-serving skew caused by different preprocessing in the training pipeline versus the serving pipeline.",
       "This is label noise in the training data causing inconsistent model behavior under distribution shift."
     ],
     "answer": 1,
-    "explanation": "Concept drift occurs when the joint distribution P(Y|X) changes over time — the relationship between features and the target evolves (e.g., user behavior changes, economic conditions shift). The mitigation strategy is a monitoring pipeline that tracks feature distribution and prediction accuracy, combined with automated retraining triggers. This differs from data drift (P(X) changes) where only input distributions shift."
+    "explanation": "Concept drift occurs when the joint distribution P(Y|X) changes over time \u2014 the relationship between features and the target evolves (e.g., user behavior changes, economic conditions shift). The mitigation strategy is a monitoring pipeline that tracks feature distribution and prediction accuracy, combined with automated retraining triggers. This differs from data drift (P(X) changes) where only input distributions shift."
   },
   {
     "id": 108,
@@ -104,12 +104,12 @@
     "question": "You are comparing two feature engineering approaches: raw features vs. feature-crossed polynomial features. Validation AUC is 0.82 for raw and 0.85 for polynomial. What additional factors should you consider before selecting the polynomial approach?",
     "options": [
       "The polynomial approach is strictly better since it has higher AUC. Ship it.",
-      "Consider training time, inference latency, model size, risk of overfitting (especially if the polynomial expansion greatly increases dimensionality), and interpretability. Higher AUC on validation may not persist if the polynomial features overfit subtly — check performance on a holdout test set and monitor production metrics.",
-      "Check only the training AUC — if both models have similar training AUC, the polynomial approach overfits and should be rejected.",
+      "Consider training time, inference latency, model size, risk of overfitting (especially if the polynomial expansion greatly increases dimensionality), and interpretability. Higher AUC on validation may not persist if the polynomial features overfit subtly \u2014 check performance on a holdout test set and monitor production metrics.",
+      "Check only the training AUC \u2014 if both models have similar training AUC, the polynomial approach overfits and should be rejected.",
       "Run a paired t-test on cross-validation fold AUCs; if p < 0.05 the polynomial model is significantly better."
     ],
     "answer": 1,
-    "explanation": "AUC lift of 0.03 is real but the evaluation must be holistic: (1) Test set performance (not just validation) to check for validation overfitting; (2) Inference latency — polynomial features increase dimensionality; (3) Model size and serving cost; (4) Interpretability — polynomial features are harder to explain; (5) Production monitoring plan. Statistical significance testing (option D) is valid additional analysis but insufficient alone."
+    "explanation": "AUC lift of 0.03 is real but the evaluation must be holistic: (1) Test set performance (not just validation) to check for validation overfitting; (2) Inference latency \u2014 polynomial features increase dimensionality; (3) Model size and serving cost; (4) Interpretability \u2014 polynomial features are harder to explain; (5) Production monitoring plan. Statistical significance testing (option D) is valid additional analysis but insufficient alone."
   },
   {
     "id": 109,
@@ -124,5 +124,103 @@
     ],
     "answer": 1,
     "explanation": "Exposure bias is the fundamental offline evaluation challenge for ranking: historical data only records interactions with items the old model showed. A new model that would rank previously-unexposed relevant items highly cannot be rewarded by offline metrics. Inverse propensity scoring adjusts for this by reweighting observations, but the gold standard is online A/B testing with real user feedback."
+  },
+  {
+    "id": 137,
+    "cert": "professional",
+    "domain": "Section 1: Experimentation",
+    "question": "A model explanation team needs local explanations for individual predictions from a black-box gradient boosting model. They are evaluating LIME vs SHAP. What is the key difference?",
+    "options": [
+      "LIME and SHAP are mathematically identical; the choice is cosmetic.",
+      "LIME fits a local linear model in the neighborhood of a prediction by sampling random perturbations \u2014 fast but explanations can be unstable across similar inputs. SHAP uses Shapley values from cooperative game theory \u2014 theoretically consistent, additive attributions with global-to-local consistency guarantees, but computationally heavier for non-tree models.",
+      "SHAP only works with neural networks; LIME works with all model types.",
+      "LIME provides global model explanations; SHAP only provides local per-prediction explanations."
+    ],
+    "answer": 1,
+    "explanation": "LIME perturbs the input, scores the perturbations with the black-box model, and fits a simple interpretable model locally. Instability: small changes in input can produce very different explanations. SHAP is grounded in game theory: each feature's attribution is the average marginal contribution across all possible feature subsets. TreeSHAP computes exact SHAP values in O(TLD\u00b2) time for tree ensembles. SHAP also provides global summaries (mean |SHAP| = global importance)."
+  },
+  {
+    "id": 138,
+    "cert": "professional",
+    "domain": "Section 1: Experimentation",
+    "question": "You are validating a time-series electricity demand model. Standard k-fold cross-validation randomly shuffles before splitting. Why is this problematic, and what strategy should you use?",
+    "options": [
+      "Standard k-fold is fine for time-series because shuffling reduces overfitting to temporal patterns.",
+      "Standard k-fold causes temporal leakage: validation folds may lie earlier in time than training folds, letting the model see future data during training. Use TimeSeriesSplit (expanding window CV): for fold i, train on all data up to time T_i, validate on T_i+1 to T_i+h. This simulates true forecasting conditions.",
+      "Use stratified k-fold with the target as the stratification key to ensure temporal balance.",
+      "Leave-one-out CV is always correct for time-series regardless of dataset size."
+    ],
+    "answer": 1,
+    "explanation": "In time-series, data is temporally ordered. Random k-fold shuffles break this order: a training sample from time T+5 may end up in the same fold as a validation sample from T+1, leaking future signal into training. TimeSeriesSplit (also called expanding window or walk-forward validation) preserves the temporal constraint: training always precedes validation in time, faithfully simulating the forecasting deployment scenario."
+  },
+  {
+    "id": 139,
+    "cert": "professional",
+    "domain": "Section 1: Experimentation",
+    "question": "You ran 50 model configurations and selected the one with the best test set accuracy (94%). Why is this estimate likely inflated, and what is the correct experimental protocol?",
+    "options": [
+      "The estimate is fine \u2014 selecting the best test accuracy is the standard practice.",
+      "Using the test set for model selection causes holdout contamination: with 50 models, you effectively perform a 50-way multiple comparison. The best-of-50 test accuracy is optimistically biased. Correct protocol: use the validation set for all selection; reserve the test set for a single final evaluation after selection is complete.",
+      "The estimate is inflated because the model should be trained on test data too.",
+      "Run 50 models on 50 separate test sets and report the average accuracy."
+    ],
+    "answer": 1,
+    "explanation": "Holdout contamination (also called peeking or test set leakage): each time you evaluate a model on the test set, information about the test distribution leaks into your selection decision. Over 50 models, the probability of finding a model that happens to perform well on that specific test set by chance is significant \u2014 the selected model's test accuracy is not an unbiased estimate of its true generalization error. The fix: development uses only the validation set; the test set is touched exactly once."
+  },
+  {
+    "id": 140,
+    "cert": "professional",
+    "domain": "Section 1: Experimentation",
+    "question": "A medical risk score model outputs probabilities for treatment decisions. A calibration plot shows the model consistently outputs 0.8 for events with a true frequency of 0.6 (overconfident). What should you apply?",
+    "options": [
+      "Apply L2 regularization to bring predicted probabilities closer to the prior.",
+      "Apply probability calibration: use Platt scaling (sigmoid fitting, better for SVMs/small datasets) or isotonic regression (non-parametric, better for larger datasets with monotonic miscalibration). In scikit-learn: `CalibratedClassifierCV`. Fit the calibrator on a held-out calibration set separate from both training and test sets.",
+      "Increase the classification threshold from 0.5 to 0.8 to correct the overestimation.",
+      "Switch to logistic regression, which is always perfectly calibrated by construction."
+    ],
+    "answer": 1,
+    "explanation": "Calibration corrects the mapping from model output scores to true probabilities. Platt scaling fits a sigmoid (logistic regression) on the uncalibrated scores vs. true labels \u2014 best when the miscalibration is sigmoidal. Isotonic regression fits a step function \u2014 better for arbitrary monotonic miscalibration with sufficient data. Always use a separate calibration set to avoid overfitting. Gradient boosting and neural networks tend to be poorly calibrated without explicit calibration."
+  },
+  {
+    "id": 141,
+    "cert": "professional",
+    "domain": "Section 1: Experimentation",
+    "question": "You ran a 2-week A/B test between a new model (treatment) and the current model (control). Treatment shows 2.1% lift in click-through rate with p=0.03. Your manager asks: 'Can we ship?' What caveats must you communicate?",
+    "options": [
+      "p < 0.05 means the result is definitely real; ship immediately.",
+      "p=0.03 meets the conventional \u03b1=0.05 threshold (3% chance of observing this lift under the null). However: (1) check practical significance \u2014 is 2.1% lift meaningful for the business? (2) test for novelty effects \u2014 did engagement decay after day 3? (3) apply multiple-testing correction if many metrics were tracked simultaneously. (4) check segment heterogeneity \u2014 is the lift uniform or driven by a narrow user group?",
+      "p < 0.05 applies only to medical trials; for product A/B tests the threshold is p < 0.01.",
+      "The correct threshold is always p < 0.001 for ML model comparisons."
+    ],
+    "answer": 1,
+    "explanation": "Statistical significance (p < 0.05) is necessary but not sufficient for shipping. Key checks: (a) practical significance \u2014 effect size matters, not just p-value; (b) novelty effects \u2014 users may engage more with anything new, inflating early results; (c) multiple comparisons \u2014 tracking 10 metrics inflates false positive rate by 10x; apply Bonferroni or Benjamini-Hochberg correction; (d) segment interaction \u2014 a model that helps power users but hurts casual users may have a positive aggregate lift but negative business impact."
+  },
+  {
+    "id": 142,
+    "cert": "professional",
+    "domain": "Section 1: Experimentation",
+    "question": "A risk team needs both global feature importance (across all loan applications) and local explanations (why was this specific applicant denied?). Which SHAP plot types address each need?",
+    "options": [
+      "SHAP waterfall plots for global importance; SHAP summary plots for local explanations.",
+      "Global importance: **SHAP summary plot** (beeswarm) or **SHAP bar plot** (mean |SHAP| per feature). Local explanations: **SHAP waterfall plot** or **SHAP force plot** showing how each feature pushed a specific prediction above or below the baseline. Both are in the `shap` library and can be logged as MLflow artifacts.",
+      "SHAP only provides global explanations; use LIME for local per-prediction explanations.",
+      "SHAP force plots provide global importance; SHAP waterfall plots show batch-level trends."
+    ],
+    "answer": 1,
+    "explanation": "SHAP summary/beeswarm plots show the distribution of SHAP values for each feature across all training samples \u2014 global importance with per-sample granularity. SHAP bar plots aggregate to mean |SHAP| per feature (simpler global ranking). SHAP waterfall and force plots decompose a single prediction: baseline + feature contributions = final prediction. The `shap` library provides all of these and integrates with MLflow via `mlflow.log_figure()`."
+  },
+  {
+    "id": 143,
+    "cert": "professional",
+    "domain": "Section 1: Experimentation",
+    "question": "A team has 500 MLflow runs and needs to find runs where `params.model_type = 'xgboost'`, `params.learning_rate < '0.01'`, AND `metrics.val_auc > 0.90`. What is the correct MLflow API call?",
+    "options": [
+      "Use `mlflow.load_experiment()` and manually filter the resulting DataFrame in pandas.",
+      "Use `mlflow.search_runs(experiment_ids=['exp_id'], filter_string=\"params.model_type = 'xgboost' AND params.learning_rate < '0.01' AND metrics.val_auc > 0.90\")`. MLflow's SQL-like filter syntax supports params, metrics, tags, and run attributes.",
+      "Export all runs to CSV and write a SQL query against the exported file.",
+      "Use `MlflowClient.get_experiment_by_name()` which returns pre-filtered runs."
+    ],
+    "answer": 1,
+    "explanation": "`mlflow.search_runs()` supports a SQL-like `filter_string` with conditions on `params.*`, `metrics.*`, `tags.*`, and `attributes.*`. It returns a pandas DataFrame of matching runs. Note: parameter values are always stored as strings in MLflow, so numeric comparisons on params work as lexicographic string comparison \u2014 for numeric params, consider also filtering on the returned DataFrame for correctness."
   }
 ]

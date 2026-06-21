@@ -11,7 +11,7 @@
       "Spark ML's MultilayerPerceptronClassifier, which natively distributes gradient computation across all workers."
     ],
     "answer": 1,
-    "explanation": "Horovod is the framework for distributed deep learning on Spark. Databricks provides HorovodRunner which uses Spark to launch Horovod training processes on worker nodes. It supports TensorFlow and PyTorch. HorovodRunner(np=N) launches N parallel training processes — typically one per GPU or worker."
+    "explanation": "Horovod is the framework for distributed deep learning on Spark. Databricks provides HorovodRunner which uses Spark to launch Horovod training processes on worker nodes. It supports TensorFlow and PyTorch. HorovodRunner(np=N) launches N parallel training processes \u2014 typically one per GPU or worker."
   },
   {
     "id": 24,
@@ -25,7 +25,7 @@
       "SparkTrials supports gradient-based optimization; Trials only supports random search."
     ],
     "answer": 1,
-    "explanation": "The key difference is parallelism. Trials runs each trial serially on the driver. SparkTrials distributes trials across the Spark cluster — each worker receives a trial to evaluate in parallel. Both use the same TPE algorithm for Bayesian optimization. SparkTrials also integrates with MLflow automatically when used on Databricks."
+    "explanation": "The key difference is parallelism. Trials runs each trial serially on the driver. SparkTrials distributes trials across the Spark cluster \u2014 each worker receives a trial to evaluate in parallel. Both use the same TPE algorithm for Bayesian optimization. SparkTrials also integrates with MLflow automatically when used on Databricks."
   },
   {
     "id": 25,
@@ -39,7 +39,7 @@
       "Export the Spark DataFrame to a CSV file, then load it into a single-node machine for inference."
     ],
     "answer": 2,
-    "explanation": "Pandas UDFs (also called vectorized UDFs) are the standard pattern for scalable batch inference. They operate on Pandas Series/DataFrames in batches (not row by row), which is far more efficient than regular Python UDFs. The Spark executor serializes batches and distributes them to workers, enabling full cluster parallelism. toPandas() moves all data to the driver — not scalable for 50M rows."
+    "explanation": "Pandas UDFs (also called vectorized UDFs) are the standard pattern for scalable batch inference. They operate on Pandas Series/DataFrames in batches (not row by row), which is far more efficient than regular Python UDFs. The Spark executor serializes batches and distributes them to workers, enabling full cluster parallelism. toPandas() moves all data to the driver \u2014 not scalable for 50M rows."
   },
   {
     "id": 26,
@@ -64,7 +64,7 @@
       "Replace `torch.optim.Adam` with `horovod.torch.optimizers.Adam`, a Horovod-specific optimizer class.",
       "Wrap the standard PyTorch optimizer with `hvd.DistributedOptimizer(optimizer, named_parameters=model.named_parameters())`, which intercepts gradient updates and averages them across all workers using allreduce.",
       "Set `torch.distributed.init_process_group(backend='horovod')` before initializing the optimizer.",
-      "No modification is needed — Horovod hooks into PyTorch's autograd automatically when hvd.init() is called."
+      "No modification is needed \u2014 Horovod hooks into PyTorch's autograd automatically when hvd.init() is called."
     ],
     "answer": 1,
     "explanation": "The required change is wrapping the optimizer with `hvd.DistributedOptimizer`. This is the hook Horovod uses to intercept gradients after the backward pass and average them across all workers via allreduce before the parameter update step. Without this wrapping, each worker trains independently with no gradient synchronization."
@@ -95,6 +95,62 @@
       "It sets the random seed for reproducible trial sampling across 8 parallel streams."
     ],
     "answer": 1,
-    "explanation": "parallelism in SparkTrials controls how many Hyperopt trials run simultaneously on the Spark cluster. The practical upper bound is the number of available Spark workers/executors, since each concurrent trial requires one Spark task. Setting parallelism higher than available workers wastes resources — excess trials will queue and wait."
+    "explanation": "parallelism in SparkTrials controls how many Hyperopt trials run simultaneously on the Spark cluster. The practical upper bound is the number of available Spark workers/executors, since each concurrent trial requires one Spark task. Setting parallelism higher than available workers wastes resources \u2014 excess trials will queue and wait."
+  },
+  {
+    "id": 55,
+    "cert": "associate",
+    "domain": "Section 4: Scaling ML Models",
+    "question": "You apply a heavy scikit-learn model for batch inference on a large Spark DataFrame. Using a standard Scalar Pandas UDF, the model reloads from disk on every function call. Which Pandas UDF type loads the model once per executor and reuses it across multiple batches?",
+    "options": [
+      "Use `@pandas_udf(returnType=DoubleType(), functionType=PandasUDFType.SCALAR)` and call `model = load_model()` inside the UDF body.",
+      "Use an **Iterator Pandas UDF** with signature `Iterator[pd.Series] -> Iterator[pd.Series]`. Load the model before the `for batch in iterator:` loop \u2014 it runs once per executor task, reused across all batches from that partition.",
+      "Use a Group Map Pandas UDF, which automatically caches the model across calls.",
+      "Use `spark.broadcast(model)` and access it inside a standard Python UDF."
+    ],
+    "answer": 1,
+    "explanation": "Iterator Pandas UDFs receive an iterator of batches (Series or DataFrames). By loading the model before entering the `for batch in iterator:` loop, the model is loaded once per partition task rather than once per row or once per batch \u2014 eliminating repeated I/O for expensive model loads (large sklearn models, deep learning weights). This is the recommended pattern for model inference in Spark."
+  },
+  {
+    "id": 56,
+    "cert": "associate",
+    "domain": "Section 4: Scaling ML Models",
+    "question": "You need to run distributed deep learning on a Databricks cluster where all workers must synchronize gradient updates between steps (AllReduce). Standard Spark map tasks don't support worker-to-worker communication. What Spark feature enables this?",
+    "options": [
+      "Increase the number of Spark partitions to match the number of workers, which forces synchronous processing.",
+      "Spark Barrier Execution Mode \u2014 launched via `RDD.barrier().mapPartitions()`. All tasks in a barrier stage start simultaneously and can synchronize via `BarrierTaskContext.barrier()`. HorovodRunner uses this internally for synchronous distributed deep learning.",
+      "Use Spark Streaming with micro-batches and add a global barrier at the end of each micro-batch.",
+      "Enable `spark.executor.allowSparkContext=true` to allow workers to communicate directly."
+    ],
+    "answer": 1,
+    "explanation": "Standard Spark task execution is independent (tasks in a stage don't know about each other). Barrier execution mode changes this: all tasks in a barrier stage are launched simultaneously, and each task can call `BarrierTaskContext.barrier()` to synchronize with all others \u2014 enabling AllReduce operations needed by Horovod, TensorFlow distributed, and PyTorch DDP for synchronous gradient aggregation."
+  },
+  {
+    "id": 57,
+    "cert": "associate",
+    "domain": "Section 4: Scaling ML Models",
+    "question": "A scikit-learn cross-validation job with 100 independent folds runs for 3 hours on the driver node. How can you distribute these folds across a Spark cluster without rewriting any scikit-learn code?",
+    "options": [
+      "Convert the scikit-learn model to Spark ML and use `CrossValidator` from `pyspark.ml.tuning`.",
+      "Use the `joblibspark` library: `from joblibspark import register_spark; register_spark()` and wrap the scikit-learn CV call with `with parallel_backend('spark', n_jobs=-1):`. This dispatches joblib tasks as Spark jobs \u2014 no scikit-learn code changes needed.",
+      "Submit 100 separate Databricks Jobs, one per fold, using the Databricks Jobs API.",
+      "Use `multiprocessing.Pool` on the driver to parallelize across CPU cores."
+    ],
+    "answer": 1,
+    "explanation": "`joblibspark` replaces joblib's default loky backend with Spark as the parallel executor. scikit-learn's `cross_val_score`, `GridSearchCV`, and similar functions use joblib internally for parallelism. `register_spark()` + `parallel_backend('spark')` routes those parallel tasks to the Spark cluster's worker nodes \u2014 utilizing all executors with zero code changes to the scikit-learn workflow."
+  },
+  {
+    "id": 58,
+    "cert": "associate",
+    "domain": "Section 4: Scaling ML Models",
+    "question": "A data scientist needs GPU-accelerated training for a PyTorch model where the model and data fit on a single machine. Distributed training is not needed. Which Databricks cluster is most appropriate?",
+    "options": [
+      "A multi-worker cluster with 4 GPU workers and 1 driver, using Horovod for data parallelism.",
+      "A Single Node cluster with a GPU instance type (e.g., p3.2xlarge on AWS). Single Node clusters run all code on the driver with no worker nodes \u2014 no Spark overhead, ideal for single-machine PyTorch or TensorFlow that doesn't benefit from distributed execution.",
+      "A standard multi-worker cluster with `spark.local.dir` set to the GPU device path.",
+      "A CPU cluster with `USE_GPU=true` to enable software GPU emulation."
+    ],
+    "answer": 1,
+    "explanation": "Single Node clusters on Databricks have only a driver \u2014 no workers, no Spark executor overhead. They support GPU instance types and are ideal for single-machine ML frameworks. If the model and data fit on one machine, a Single Node GPU cluster is simpler and more cost-effective than a multi-worker cluster where the worker GPUs would sit unused during non-distributed PyTorch training."
   }
 ]

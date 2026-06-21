@@ -11,7 +11,7 @@
       "Use Databricks Repos to clone an open-source AutoML library from GitHub."
     ],
     "answer": 1,
-    "explanation": "Databricks AutoML is the correct tool. It automatically handles feature engineering, trains multiple model types with hyperparameter tuning, logs all runs to MLflow, and generates editable Python notebooks showing exactly what was done — requiring zero hand-written training code."
+    "explanation": "Databricks AutoML is the correct tool. It automatically handles feature engineering, trains multiple model types with hyperparameter tuning, logs all runs to MLflow, and generates editable Python notebooks showing exactly what was done \u2014 requiring zero hand-written training code."
   },
   {
     "id": 2,
@@ -20,18 +20,18 @@
     "question": "After running a Databricks AutoML experiment, a data scientist wants to access the winning model for further customization. Where should he look?",
     "options": [
       "The AutoML API response object, which returns a fitted scikit-learn Pipeline object directly.",
-      "The MLflow experiment linked to the AutoML run — the best trial's run contains the logged model artifact and a generated source notebook.",
+      "The MLflow experiment linked to the AutoML run \u2014 the best trial's run contains the logged model artifact and a generated source notebook.",
       "The Databricks Model Registry, where AutoML automatically promotes the best model to the Production stage.",
       "The cluster driver logs, which print the final model parameters after training."
     ],
     "answer": 1,
-    "explanation": "Databricks AutoML logs every trial to an MLflow experiment. The best trial's run contains the model artifact and a generated notebook with the training code. AutoML does NOT automatically register or promote to Production — that requires a manual action."
+    "explanation": "Databricks AutoML logs every trial to an MLflow experiment. The best trial's run contains the model artifact and a generated notebook with the training code. AutoML does NOT automatically register or promote to Production \u2014 that requires a manual action."
   },
   {
     "id": 3,
     "cert": "associate",
     "domain": "Section 1: Databricks ML Platform",
-    "question": "A team wants to share a set of pre-computed user features across three separate ML models — a churn model, a recommendation model, and a fraud model — to avoid redundant computation and prevent training-serving skew. Which Databricks component is specifically designed for this use case?",
+    "question": "A team wants to share a set of pre-computed user features across three separate ML models \u2014 a churn model, a recommendation model, and a fraud model \u2014 to avoid redundant computation and prevent training-serving skew. Which Databricks component is specifically designed for this use case?",
     "options": [
       "Delta Lake with time travel, enabling point-in-time snapshots for any historical feature values.",
       "Databricks Feature Store, which provides a centralized registry where features are defined once and reused by multiple models during training and inference.",
@@ -39,7 +39,7 @@
       "Databricks SQL, which allows sharing feature computation logic via Views accessible by all teams."
     ],
     "answer": 1,
-    "explanation": "The Databricks Feature Store is the correct answer. It provides a centralized catalog where features are defined once using feature tables, reused by multiple models at training time, and the same feature pipeline is automatically applied at inference time — preventing training-serving skew."
+    "explanation": "The Databricks Feature Store is the correct answer. It provides a centralized catalog where features are defined once using feature tables, reused by multiple models at training time, and the same feature pipeline is automatically applied at inference time \u2014 preventing training-serving skew."
   },
   {
     "id": 4,
@@ -96,5 +96,103 @@
     ],
     "answer": 1,
     "explanation": "The `timestamp_lookup_key` specifies the column in the observation table (label table) that serves as the time cutoff for point-in-time feature lookup. Only feature values with `feature_ts <= event_ts` are included, preventing data leakage from future feature values."
+  },
+  {
+    "id": 36,
+    "cert": "associate",
+    "domain": "Section 1: Databricks ML Platform",
+    "question": "A retail company wants to predict weekly sales for 200 product SKUs for the next 8 weeks using historical sales data in a Delta table. Which Databricks AutoML problem type should they select?",
+    "options": [
+      "Regression \u2014 include week number as a numeric feature and train one model for all SKUs.",
+      "Forecasting \u2014 specify the time column, target column, forecast horizon, and output frequency. AutoML trains Prophet and auto-ARIMA models per group and selects the best per SKU.",
+      "Classification \u2014 bin weekly sales into Low/Medium/High buckets and predict the bucket.",
+      "Clustering \u2014 group similar SKUs so a single model covers each cluster."
+    ],
+    "answer": 1,
+    "explanation": "Databricks AutoML supports a Forecasting problem type that automatically selects from Prophet, auto-ARIMA, and other time-series models. You specify the time column, target, ID column (SKU), horizon, and frequency. AutoML handles per-group model selection and MLflow logging \u2014 no custom code needed."
+  },
+  {
+    "id": 37,
+    "cert": "associate",
+    "domain": "Section 1: Databricks ML Platform",
+    "question": "A team trained a model using features from the Databricks Feature Store. At batch inference time they have a Spark DataFrame with only the `customer_id` primary key and want to automatically look up all feature values and score 10 million rows. What is the correct API?",
+    "options": [
+      "Load features with `spark.read.format('delta').load(feature_table_path)` and join on `customer_id` manually.",
+      "Use `FeatureStoreClient.score_batch(model_uri, df)` \u2014 it automatically looks up feature values from the registered feature tables using the primary key and applies the logged model.",
+      "Call `mlflow.pyfunc.load_model(model_uri).predict(df)` where df contains only the primary key.",
+      "Deploy the model to Model Serving and call it from a Spark `foreachBatch` loop."
+    ],
+    "answer": 1,
+    "explanation": "`FeatureStoreClient.score_batch()` is the purpose-built API for batch inference with Feature Store: it reads the model URI, looks up which feature tables the model was trained on, retrieves the correct feature values for each primary key in the input DataFrame, assembles the full feature vector, and runs inference \u2014 all in one Spark-distributed call."
+  },
+  {
+    "id": 38,
+    "cert": "associate",
+    "domain": "Section 1: Databricks ML Platform",
+    "question": "Your organization has upgraded to Unity Catalog. What is the primary advantage of registering ML models in the Unity Catalog Model Registry over the legacy Workspace Model Registry?",
+    "options": [
+      "Unity Catalog models use a compressed artifact format that reduces storage by 10x.",
+      "Unity Catalog provides three-level namespacing (`catalog.schema.model_name`), cross-workspace model access, fine-grained GRANT/REVOKE permissions, and full data lineage tracking \u2014 none of which are available in the Workspace Registry.",
+      "The Workspace Registry supports webhooks; Unity Catalog does not.",
+      "Unity Catalog Model Registry automatically promotes models to Production after validation."
+    ],
+    "answer": 1,
+    "explanation": "Unity Catalog adds: (1) three-level namespace enabling organization-wide model discovery; (2) cross-workspace access so teams in different workspaces can share models; (3) column/row-level security via GRANT/REVOKE; (4) full lineage from data \u2192 training run \u2192 model version. The Workspace Registry is a single-workspace, flat namespace with no cross-workspace sharing."
+  },
+  {
+    "id": 39,
+    "cert": "associate",
+    "domain": "Section 1: Databricks ML Platform",
+    "question": "A team of 5 ML engineers wants to collaborate on ML code using Git feature branches and ensure Databricks notebooks are always synchronized with their GitHub repository. Which Databricks feature enables this workflow?",
+    "options": [
+      "Save notebooks as DBFS files and manually download/upload them to GitHub via the REST API.",
+      "Use Databricks Repos to connect the workspace to a Git provider (GitHub/GitLab/Bitbucket), enabling git clone, branch checkout, pull, push, and commit directly within the workspace.",
+      "Use Databricks Jobs to schedule a notebook that periodically syncs changes to a GitHub repo.",
+      "Store notebooks in MLflow experiment artifacts and version them as MLflow model versions."
+    ],
+    "answer": 1,
+    "explanation": "Databricks Repos integrates the workspace directly with Git providers. Engineers can create branches, commit, push, and pull from within the Databricks UI or via the Repos API. Each repo is a first-class workspace object, and Databricks notebooks in a Repo are tracked as source files (.py or .ipynb), enabling standard Git collaboration workflows."
+  },
+  {
+    "id": 40,
+    "cert": "associate",
+    "domain": "Section 1: Databricks ML Platform",
+    "question": "A team's recommendation API receives sporadic traffic with long idle periods but must respond within 200ms when called. They are choosing between Databricks Serverless Model Serving and Dedicated (provisioned) endpoints. Which is more appropriate?",
+    "options": [
+      "Dedicated endpoints \u2014 a fixed replica count stays always-warm, guaranteeing no cold-start latency.",
+      "Serverless Model Serving \u2014 it scales to zero during idle periods (eliminating idle cost) and automatically scales up on incoming requests with minimal cold-start overhead for typical model sizes.",
+      "Both have identical latency; choose solely on cost.",
+      "Serverless requires GPU; dedicated endpoints are required for CPU models."
+    ],
+    "answer": 1,
+    "explanation": "Serverless Model Serving is ideal for sporadic traffic: it scales to zero (no idle-cost replicas) and provisions resources on demand. Cold-start latency is typically a few seconds for the very first request after an idle period, which is usually acceptable. Dedicated endpoints keep replicas always running \u2014 better for consistent high-throughput, but expensive when idle."
+  },
+  {
+    "id": 41,
+    "cert": "associate",
+    "domain": "Section 1: Databricks ML Platform",
+    "question": "A team asks: 'Can Databricks AutoML train and tune a computer vision model to classify 50,000 product images?' What is the correct answer?",
+    "options": [
+      "Yes \u2014 AutoML supports image classification, object detection, and segmentation natively.",
+      "No \u2014 Databricks AutoML supports only three tabular problem types: Classification, Regression, and Forecasting. Image classification requires a custom training approach using PyTorch or TensorFlow.",
+      "Yes, if images are stored as binary columns in a Delta table.",
+      "AutoML supports image tasks when you select 'Computer Vision' in the problem type dropdown."
+    ],
+    "answer": 1,
+    "explanation": "Databricks AutoML is a tabular ML tool. It supports Classification (binary and multiclass), Regression, and Forecasting on structured/tabular Delta table data. Computer vision, NLP, and other unstructured-data tasks require custom training notebooks using frameworks like PyTorch or TensorFlow (or Hugging Face), logged and tracked via MLflow."
+  },
+  {
+    "id": 42,
+    "cert": "associate",
+    "domain": "Section 1: Databricks ML Platform",
+    "question": "A data scientist wants to train an XGBoost model and track it with MLflow without installing any libraries. Which cluster configuration makes this possible out-of-the-box?",
+    "options": [
+      "A Standard Runtime cluster with a manually attached `databricks-ml` pip package.",
+      "A Databricks Runtime for Machine Learning (ML Runtime) cluster \u2014 it pre-installs XGBoost, scikit-learn, TensorFlow, PyTorch, LightGBM, Hyperopt, and MLflow so no manual installation is needed.",
+      "A GPU cluster with the CUDA driver pre-installed.",
+      "A Delta Live Tables pipeline cluster with `ml` mode enabled."
+    ],
+    "answer": 1,
+    "explanation": "Databricks ML Runtime is a superset of the standard Databricks Runtime. It pre-installs the most popular ML libraries (XGBoost, scikit-learn, TensorFlow, PyTorch, Hyperopt, MLflow, pandas, NumPy, etc.) and configures cluster settings for ML workloads. No `%pip install` steps are required for these core libraries."
   }
 ]

@@ -77,7 +77,7 @@
     "options": [
       "RMSE is the mean absolute difference between predictions and actuals. It is always better than MAE.",
       "RMSE is the square root of the mean squared errors. It penalizes large errors more heavily than MAE because of squaring. Prefer RMSE when large prediction errors are disproportionately costly.",
-      "RMSE measures the proportion of variance explained by the model (like R²). Use it when comparing models on different datasets.",
+      "RMSE measures the proportion of variance explained by the model (like R\u00b2). Use it when comparing models on different datasets.",
       "RMSE and MAE are equivalent metrics; the choice is purely cosmetic."
     ],
     "answer": 1,
@@ -96,5 +96,103 @@
     ],
     "answer": 1,
     "explanation": "Stratified k-fold ensures each fold maintains approximately the same class distribution as the full dataset. Without stratification, a fold might contain no examples of a rare class, making precision/recall/AUC metrics undefined or misleading for that class."
+  },
+  {
+    "id": 43,
+    "cert": "associate",
+    "domain": "Section 2: ML Workflows",
+    "question": "A machine learning engineer splits her dataset into training (70%), validation (15%), and test (15%) sets. What is the correct purpose of the validation set vs. the test set?",
+    "options": [
+      "Both are used interchangeably for final performance reporting; the split is for redundancy.",
+      "Validation: hyperparameter tuning and model selection during development (can be referenced many times). Test: held-out set used ONLY ONCE at the very end to estimate real-world performance \u2014 must never be used during development to avoid optimistic bias.",
+      "Validation: used for the final deployment decision; Test: used for A/B testing in production.",
+      "Validation and Test can both be used repeatedly as long as results are averaged."
+    ],
+    "answer": 1,
+    "explanation": "The validation set is used repeatedly during development to compare models and tune hyperparameters \u2014 its performance estimates are optimistic because selections are made based on it. The test set must be used exactly once, after all development decisions are finalized, to get an unbiased estimate of real-world performance. Using the test set for model selection introduces optimistic bias (holdout contamination)."
+  },
+  {
+    "id": 44,
+    "cert": "associate",
+    "domain": "Section 2: ML Workflows",
+    "question": "You have a high-cardinality categorical feature `zip_code` with 50,000 unique values. One-hot encoding produces 50,000 binary columns. Which encoding replaces each category with the mean of the target variable for that category \u2014 and what must you do to prevent data leakage?",
+    "options": [
+      "Ordinal encoding \u2014 assigns a sequential integer alphabetically; always leakage-free.",
+      "Target encoding (mean encoding) \u2014 replaces each category with the mean target value computed on the training set. To prevent leakage, compute target means using cross-fold estimation (out-of-fold statistics) so a training row's own label does not influence its own encoding.",
+      "Binary encoding \u2014 converts the ordinal integer to binary bits; leakage-free by construction.",
+      "Frequency encoding \u2014 replaces each category with its row count; target values are never used."
+    ],
+    "answer": 1,
+    "explanation": "Target encoding is powerful for high-cardinality features but introduces leakage if the target mean is computed on the full training set (each sample's own label contributes to its own encoding). The fix is leave-one-out or k-fold cross target encoding: each training fold computes the mean from the other folds. At inference time, use the mean computed from the full training set."
+  },
+  {
+    "id": 45,
+    "cert": "associate",
+    "domain": "Section 2: ML Workflows",
+    "question": "Your linear regression model has 500 features but you suspect only ~20 are truly relevant. Which regularization technique drives irrelevant feature coefficients exactly to zero, performing automatic feature selection?",
+    "options": [
+      "L2 (Ridge) \u2014 shrinks all coefficients toward zero proportionally but never sets any to exactly zero.",
+      "L1 (Lasso) \u2014 adds a penalty proportional to the absolute sum of coefficients, which drives sparse solutions: irrelevant feature coefficients are set exactly to zero, performing built-in feature selection.",
+      "Dropout \u2014 randomly zeros 50% of feature values during each training iteration.",
+      "Elastic Net always uses a fixed 50/50 mix of L1 and L2 regardless of the use case."
+    ],
+    "answer": 1,
+    "explanation": "L1 (Lasso) regularization produces sparse models because its gradient includes a constant-magnitude penalty that can overcome small coefficient gradients, pushing them to exactly zero. L2 (Ridge) shrinks coefficients proportionally \u2014 they approach zero asymptotically but rarely reach it. When you suspect few relevant features, L1 is the right choice. Elastic Net (L1+L2) is a middle ground when groups of correlated features should be selected together."
+  },
+  {
+    "id": 46,
+    "cert": "associate",
+    "domain": "Section 2: ML Workflows",
+    "question": "A binary classifier achieves an AUC-ROC of 0.92. What does this score mean, and what does an AUC of 0.5 indicate?",
+    "options": [
+      "AUC 0.92 means the model correctly classifies 92% of all samples. AUC 0.5 means 50% accuracy.",
+      "AUC 0.92 means there is a 92% probability that the model ranks a randomly chosen positive instance higher than a randomly chosen negative instance (discrimination ability). AUC 0.5 is equivalent to random guessing \u2014 the model has no discriminative power.",
+      "AUC 0.92 means precision is 0.92 and recall is 0.92. AUC 0.5 means precision equals recall.",
+      "AUC 0.92 measures correct-class probability averaged over all multiclass predictions, normalized to [0,1]."
+    ],
+    "answer": 1,
+    "explanation": "The ROC-AUC is the probability that the model scores a random positive example higher than a random negative example (concordance statistic). An AUC of 1.0 is perfect discrimination; 0.5 is no discrimination (equivalent to random guessing). AUC is threshold-independent and insensitive to class imbalance, making it useful for comparing classifiers without committing to a specific operating point."
+  },
+  {
+    "id": 47,
+    "cert": "associate",
+    "domain": "Section 2: ML Workflows",
+    "question": "You are building a cancer screening model. Missing a cancer case (false negative) is catastrophic. Which metric should you optimize, and what threshold change achieves this?",
+    "options": [
+      "Optimize Precision to ensure every positive prediction is correct, minimizing false positives.",
+      "Optimize Recall (sensitivity) by lowering the classification threshold (e.g., from 0.5 to 0.1). This flags more patients as positive (more false positives and follow-up cost) but ensures nearly every actual cancer case is caught (minimizing false negatives \u2014 the catastrophic outcome).",
+      "Optimize Accuracy, since it balances false positives and false negatives equally.",
+      "Optimize F1 score, which is always the correct metric for medical ML problems."
+    ],
+    "answer": 1,
+    "explanation": "When false negatives are catastrophic (missing cancer) and false positives are costly but manageable (unnecessary tests), Recall (TP / (TP + FN)) is the primary optimization target. Lowering the classification threshold increases recall at the cost of precision. In practice, you choose the threshold by examining the Precision-Recall curve at the Recall level acceptable to clinical requirements."
+  },
+  {
+    "id": 48,
+    "cert": "associate",
+    "domain": "Section 2: ML Workflows",
+    "question": "A tabular dataset has 8% missing values in a numerical feature `account_age_months`. Which imputation approach is most appropriate, and why must the imputer be fit only on training data?",
+    "options": [
+      "Drop all rows with missing values \u2014 8% data loss is acceptable.",
+      "Use `sklearn.impute.SimpleImputer(strategy='median')`: fit on training data only, then transform both train and test. Fitting only on training data prevents leakage \u2014 using test set statistics at fit time would let information from the future (test set) influence the imputation applied during training.",
+      "Use the median of the full dataset (train + test combined) for the most accurate central tendency estimate.",
+      "Replace missing values with -1 as a sentinel; tree models handle this natively."
+    ],
+    "answer": 1,
+    "explanation": "Fitting the imputer only on training data simulates the real-world scenario: at production time, you only have the training distribution available to impute values. If you fit on train+test combined, the test set's distribution leaks into training preprocessing. The `fit_transform(X_train)` \u2192 `transform(X_test)` pattern (or using a Pipeline) ensures this separation automatically."
+  },
+  {
+    "id": 49,
+    "cert": "associate",
+    "domain": "Section 2: ML Workflows",
+    "question": "After training a scikit-learn RandomForestClassifier, a data scientist accesses `model.feature_importances_`. What does this array measure, and what is a key limitation?",
+    "options": [
+      "It measures the Pearson correlation between each feature and the label. Limitation: captures only linear relationships.",
+      "It measures mean decrease in impurity (Gini or entropy) across all trees and splits for each feature. Limitation: it systematically overestimates the importance of high-cardinality numerical features compared to low-cardinality categoricals, and does not capture feature interaction effects.",
+      "It measures the SHAP value for each feature averaged over the training set.",
+      "It measures the coefficient magnitude, identical to linear regression coefficients."
+    ],
+    "answer": 1,
+    "explanation": "Random Forest feature importances aggregate the total reduction in node impurity attributed to each feature across all trees. The key limitation: features with many unique values (e.g., a random integer ID) tend to produce many high-purity splits by chance, inflating their measured importance. Prefer permutation importance or SHAP values for more reliable feature ranking."
   }
 ]

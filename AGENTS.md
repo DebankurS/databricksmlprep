@@ -25,7 +25,7 @@ databricks-ml-certification/
     ├── index.html         SPA shell with cert switcher in sidebar
     ├── app.js             All SPA logic — cert switching, quiz, tracker, scheduler
     ├── style.css          Databricks Red (#FF3621) CSS design system
-    ├── questions.js       67 questions (35 associate + 32 professional)
+    ├── questions/         125 questions (62 associate + 63 professional, split across 9 JSON files)
     ├── docs/
     │   ├── associate/     5 markdown study guide files
     │   └── professional/  4 markdown study guide files
@@ -53,7 +53,7 @@ Each cert's tracker and scheduler state are fully independent. Default written b
 
 ### Questions
 
-Each question has a `cert` field (`"associate"` or `"professional"`). Quiz engine filters by `cert === activeCert` before section filtering. Associate IDs 1–35, Professional IDs 101–132.
+Each question has a `cert` field (`"associate"` or `"professional"`). Quiz engine filters by `cert === activeCert` before section filtering. Associate IDs 1–62, Professional IDs 101–163.
 
 ### Notes / Docs
 
@@ -125,7 +125,7 @@ npm test
 # Runs: docker compose up -d --wait && node test.js; docker compose down
 ```
 
-Test validates: HTTP status codes, all 9 doc files, 3 snippets, question schema (exactly 67 total: 35 associate + 32 professional), progress API round-trip, file structure. Adding or removing questions will fail the test suite.
+Test validates: HTTP status codes, all 9 doc files, 3 snippets, question schema (exactly 125 total: 62 associate + 63 professional), progress API round-trip, file structure. Adding or removing questions will fail the test suite.
 
 ---
 

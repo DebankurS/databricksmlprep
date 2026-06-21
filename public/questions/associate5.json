@@ -5,7 +5,7 @@
     "domain": "Section 5: MLflow Model Lifecycle",
     "question": "In MLflow, what is the difference between `mlflow.log_param()`, `mlflow.log_metric()`, and `mlflow.log_artifact()`?",
     "options": [
-      "They are identical — all three log key-value pairs to the MLflow run; the naming is for developer readability only.",
+      "They are identical \u2014 all three log key-value pairs to the MLflow run; the naming is for developer readability only.",
       "`log_param()` records a single key-value configuration (e.g., learning_rate=0.01) that does not change during training. `log_metric()` records a numeric value that can change over training steps (e.g., accuracy per epoch). `log_artifact()` uploads a file or directory (e.g., a plot, CSV, or model file) to the run's artifact store.",
       "`log_param()` is for input features; `log_metric()` is for output labels; `log_artifact()` is for model weights.",
       "`log_metric()` is batch-only; `log_param()` supports streaming; `log_artifact()` is for binary blobs only."
@@ -33,7 +33,7 @@
     "domain": "Section 5: MLflow Model Lifecycle",
     "question": "A team has trained 3 candidate models logged to the same MLflow experiment. How do they programmatically find the best model run by validation F1-score using the MLflow Python client?",
     "options": [
-      "Call `mlflow.get_best_run(experiment_name, metric='val_f1', order='max')` — this is a native MLflow function.",
+      "Call `mlflow.get_best_run(experiment_name, metric='val_f1', order='max')` \u2014 this is a native MLflow function.",
       "Use `mlflow.search_runs(experiment_ids=[exp_id], order_by=['metrics.val_f1 DESC'])` to retrieve a DataFrame of runs sorted by the metric, then select the first row's run_id.",
       "Navigate to the MLflow UI, sort runs by val_f1 manually, and copy the run_id.",
       "Call `mlflow.list_run_infos()` and iterate through each run to compare val_f1 values."
@@ -53,7 +53,7 @@
       "Transitioning to Production copies the model artifact to a separate, air-gapped production storage bucket."
     ],
     "answer": 1,
-    "explanation": "Stage transitions in MLflow Model Registry are metadata changes — they label a version (None → Staging → Production → Archived) for discoverability. They do NOT trigger deployment automatically. Production stage signals 'this is the canonical version to serve.' Applications load the Production version via mlflow.pyfunc.load_model('models:/MyModel/Production')."
+    "explanation": "Stage transitions in MLflow Model Registry are metadata changes \u2014 they label a version (None \u2192 Staging \u2192 Production \u2192 Archived) for discoverability. They do NOT trigger deployment automatically. Production stage signals 'this is the canonical version to serve.' Applications load the Production version via mlflow.pyfunc.load_model('models:/MyModel/Production')."
   },
   {
     "id": 34,
@@ -75,12 +75,68 @@
     "domain": "Section 5: MLflow Model Lifecycle",
     "question": "Which MLflow function loads a model from the registry as a generic Python function that can be called with a Pandas DataFrame, regardless of the original training framework (sklearn, XGBoost, PyTorch, etc.)?",
     "options": [
-      "`mlflow.sklearn.load_model('models:/MyModel/Production')` — the sklearn flavor is the universal loader.",
-      "`mlflow.pyfunc.load_model('models:/MyModel/Production')` — the pyfunc flavor wraps any model as a Python callable with a standard `predict(data: DataFrame) -> DataFrame` interface.",
-      "`mlflow.spark.load_model('models:/MyModel/Production')` — Spark models serve as the universal abstraction.",
-      "`mlflow.load_artifact('models:/MyModel/Production')` — artifacts are the generic model storage format."
+      "`mlflow.sklearn.load_model('models:/MyModel/Production')` \u2014 the sklearn flavor is the universal loader.",
+      "`mlflow.pyfunc.load_model('models:/MyModel/Production')` \u2014 the pyfunc flavor wraps any model as a Python callable with a standard `predict(data: DataFrame) -> DataFrame` interface.",
+      "`mlflow.spark.load_model('models:/MyModel/Production')` \u2014 Spark models serve as the universal abstraction.",
+      "`mlflow.load_artifact('models:/MyModel/Production')` \u2014 artifacts are the generic model storage format."
     ],
     "answer": 1,
     "explanation": "mlflow.pyfunc.load_model() is the framework-agnostic model loader. It loads any logged model (sklearn, XGBoost, TensorFlow, PyTorch, custom pyfunc) and returns a PythonModel object with a .predict(data) method that accepts Pandas DataFrames or numpy arrays. This is the standard pattern for model serving and batch inference pipelines."
+  },
+  {
+    "id": 59,
+    "cert": "associate",
+    "domain": "Section 5: MLflow Model Lifecycle",
+    "question": "Your ops team's deployment scripts load the production model using `mlflow.pyfunc.load_model('models:/fraud_model@Champion')`. When a new model version passes validation, how do you redirect production traffic without changing any deployment script?",
+    "options": [
+      "Delete the old model version and re-register the new model with the same version number.",
+      "Use **MLflow model aliases**: call `MlflowClient().set_registered_model_alias('fraud_model', 'Champion', version=5)`. The `@Champion` alias now resolves to version 5. Deployment scripts loading via `models:/fraud_model@Champion` automatically use the new version without any code changes.",
+      "Transition the old version to 'Archived' and the new version to 'Production' stage.",
+      "Call `mlflow.register_model()` to overwrite the existing model artifact."
+    ],
+    "answer": 1,
+    "explanation": "MLflow model aliases are mutable named pointers to a specific model version. An alias like `Champion` can be atomically reassigned to a new version \u2014 deployment systems that reference `models:/my_model@Champion` transparently pick up the new version on the next load. This is the modern replacement for the deprecated 'Staging/Production' stage transitions and enables zero-downtime champion/challenger swaps."
+  },
+  {
+    "id": 60,
+    "cert": "associate",
+    "domain": "Section 5: MLflow Model Lifecycle",
+    "question": "A team wants to track exactly which Delta table version was used to train each MLflow run for full reproducibility. Which MLflow feature logs dataset metadata as a first-class run object?",
+    "options": [
+      "Log the dataset path as a run parameter: `mlflow.log_param('dataset_path', path)`.",
+      "Use `mlflow.log_input(mlflow.data.from_spark(df, table_name='customer_data', version=42), context='training')` \u2014 this logs dataset name, schema, source, version, and a data hash as a first-class `Dataset` object on the run, viewable in the MLflow UI's 'Inputs' tab.",
+      "Save the dataset as CSV and call `mlflow.log_artifact('dataset.csv')`.",
+      "Use `mlflow.set_tag('dataset_version', '42')` to record the Delta table version."
+    ],
+    "answer": 1,
+    "explanation": "`mlflow.log_input()` records datasets as structured metadata on an MLflow run. It stores dataset name, source URI, schema, version, and a digest (hash) \u2014 making the link between training runs and exact data versions explicit and queryable. This is richer than logging a path as a parameter because MLflow understands the dataset type and can render it in the UI and lineage graph."
+  },
+  {
+    "id": 61,
+    "cert": "associate",
+    "domain": "Section 5: MLflow Model Lifecycle",
+    "question": "When logging a model with `mlflow.sklearn.log_model()`, what is the purpose of the `input_example` parameter?",
+    "options": [
+      "`input_example` specifies the training dataset so MLflow can refit the model on demand.",
+      "The `input_example` is a small sample of valid input data (e.g., 5 feature rows) logged with the model. It (1) auto-generates an OpenAPI input schema for Model Serving endpoints, (2) enables quick local testing via `mlflow.models.predict()`, and (3) documents the expected input format for team members.",
+      "`input_example` triggers MLflow autologging for the model's feature columns.",
+      "`input_example` is required for model registration; models without it cannot be promoted."
+    ],
+    "answer": 1,
+    "explanation": "The `input_example` parameter logs a small representative DataFrame or dict alongside the model artifact. MLflow uses it to infer and validate the model signature (feature names, types), generates an OpenAPI schema for serving endpoints, and allows `mlflow.models.predict(model_uri, data)` to work without manually constructing inputs. It is optional but strongly recommended for production models."
+  },
+  {
+    "id": 62,
+    "cert": "associate",
+    "domain": "Section 5: MLflow Model Lifecycle",
+    "question": "A CI/CD pipeline must programmatically list all 'Staging' model versions, retrieve their training metrics, and archive versions with validation F1 below 0.85. Which MLflow interface should be used?",
+    "options": [
+      "Use the MLflow REST API directly with `requests.get()` against the tracking server URL.",
+      "Use `mlflow.client.MlflowClient()`: `client.search_model_versions(\"name='my_model' and aliases = 'staging'\")` to list versions, `client.get_run(run_id).data.metrics` to fetch metrics, and `client.delete_model_version()` or `client.set_registered_model_alias()` for lifecycle management.",
+      "Use the Databricks CLI `databricks models list` piped to a Python subprocess.",
+      "Use `mlflow.search_runs()` with a filter string to find and archive model versions."
+    ],
+    "answer": 1,
+    "explanation": "`MlflowClient` is the programmatic Python interface to both the MLflow Tracking Server and Model Registry. It provides fine-grained control: list versions, get run data, set/delete aliases, add tags, and transition stages. `mlflow.search_runs()` queries experiment runs but does not operate on model registry versions. `MlflowClient` is the correct tool for automation pipelines that interact with the registry."
   }
 ]

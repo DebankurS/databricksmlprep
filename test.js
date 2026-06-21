@@ -153,12 +153,12 @@ async function runTests() {
   ];
 
   assert(Array.isArray(PRACTICE_QUESTIONS), "PRACTICE_QUESTIONS is an array");
-  assert(PRACTICE_QUESTIONS.length === 71, `Total questions === 71 (got ${PRACTICE_QUESTIONS.length})`);
+  assert(PRACTICE_QUESTIONS.length === 125, `Total questions === 125 (got ${PRACTICE_QUESTIONS.length})`);
 
   const associateQs = PRACTICE_QUESTIONS.filter(q => q.cert === "associate");
   const professionalQs = PRACTICE_QUESTIONS.filter(q => q.cert === "professional");
-  assert(associateQs.length === 35, `Associate questions === 35 (got ${associateQs.length})`);
-  assert(professionalQs.length === 36, `Professional questions === 36 (got ${professionalQs.length})`);
+  assert(associateQs.length === 62, `Associate questions === 62 (got ${associateQs.length})`);
+  assert(professionalQs.length === 63, `Professional questions === 63 (got ${professionalQs.length})`);
 
   // Validate schema for each question
   const VALID_DOMAINS_BY_CERT = {
@@ -256,7 +256,7 @@ async function runTests() {
     "public/index.html",
     "public/app.js",
     "public/style.css",
-    "public/questions.js",
+    "public/questions/associate1.json",
     "server.js",
     "docker-compose.yml",
     "package.json",

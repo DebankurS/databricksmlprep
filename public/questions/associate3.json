@@ -5,13 +5,13 @@
     "domain": "Section 3: Spark ML",
     "question": "You are building a Spark ML Pipeline with the following stages: VectorAssembler, StringIndexer, and LogisticRegression. In what order should these stages be arranged, and why?",
     "options": [
-      "LogisticRegression → VectorAssembler → StringIndexer, because the estimator must initialize before transformers.",
-      "StringIndexer → VectorAssembler → LogisticRegression, because StringIndexer converts strings to numeric indices, VectorAssembler then combines all numeric features into a feature vector, and LogisticRegression trains on the assembled vector.",
-      "VectorAssembler → StringIndexer → LogisticRegression, because vectors must be assembled before indexing.",
-      "The order does not matter — Spark ML Pipeline infers dependencies automatically."
+      "LogisticRegression \u2192 VectorAssembler \u2192 StringIndexer, because the estimator must initialize before transformers.",
+      "StringIndexer \u2192 VectorAssembler \u2192 LogisticRegression, because StringIndexer converts strings to numeric indices, VectorAssembler then combines all numeric features into a feature vector, and LogisticRegression trains on the assembled vector.",
+      "VectorAssembler \u2192 StringIndexer \u2192 LogisticRegression, because vectors must be assembled before indexing.",
+      "The order does not matter \u2014 Spark ML Pipeline infers dependencies automatically."
     ],
     "answer": 1,
-    "explanation": "The correct order is: StringIndexer (converts string columns to numeric indices) → VectorAssembler (combines all numeric feature columns into a single dense vector) → LogisticRegression (trains on the assembled feature vector). Transformers run in sequence; each stage's output feeds the next stage."
+    "explanation": "The correct order is: StringIndexer (converts string columns to numeric indices) \u2192 VectorAssembler (combines all numeric feature columns into a single dense vector) \u2192 LogisticRegression (trains on the assembled feature vector). Transformers run in sequence; each stage's output feeds the next stage."
   },
   {
     "id": 16,
@@ -20,7 +20,7 @@
     "question": "In Spark ML, what is the difference between a Transformer and an Estimator?",
     "options": [
       "A Transformer stores model weights; an Estimator provides the evaluation metric computation.",
-      "A Transformer applies a transformation to a DataFrame and returns a new DataFrame (e.g., VectorAssembler, StandardScaler when already fitted). An Estimator learns from data via .fit() and returns a fitted Transformer (Model) — e.g., LogisticRegression is an Estimator that returns a LogisticRegressionModel.",
+      "A Transformer applies a transformation to a DataFrame and returns a new DataFrame (e.g., VectorAssembler, StandardScaler when already fitted). An Estimator learns from data via .fit() and returns a fitted Transformer (Model) \u2014 e.g., LogisticRegression is an Estimator that returns a LogisticRegressionModel.",
       "A Transformer is used for feature engineering; an Estimator is used only for prediction.",
       "An Estimator is a stateless operation; a Transformer stores learned parameters from training data."
     ],
@@ -53,7 +53,7 @@
       "A Spark Job object representing the asynchronous fit operation."
     ],
     "answer": 1,
-    "explanation": "pipeline.fit(train_df) returns a PipelineModel — a fitted version of the pipeline where all Estimator stages have been replaced by their fitted Transformer (Model) counterparts. You call pipelineModel.transform(test_df) to apply all transformation and prediction stages to new data."
+    "explanation": "pipeline.fit(train_df) returns a PipelineModel \u2014 a fitted version of the pipeline where all Estimator stages have been replaced by their fitted Transformer (Model) counterparts. You call pipelineModel.transform(test_df) to apply all transformation and prediction stages to new data."
   },
   {
     "id": 19,
@@ -75,10 +75,10 @@
     "domain": "Section 3: Spark ML",
     "question": "A Spark ML pipeline produces predictions. The task is binary classification. Which evaluator should you use to compute AUC-ROC, and what is the correct call?",
     "options": [
-      "`MulticlassClassificationEvaluator(metricName='accuracy')` — it handles binary classification by default.",
-      "`BinaryClassificationEvaluator(metricName='areaUnderROC', labelCol='label', rawPredictionCol='rawPrediction')` — this evaluator is specifically designed for binary classification metrics.",
-      "`RegressionEvaluator(metricName='rmse')` — ROC curves are computed from regression residuals.",
-      "`ClusteringEvaluator(metricName='silhouette')` — binary classification evaluates cluster separation."
+      "`MulticlassClassificationEvaluator(metricName='accuracy')` \u2014 it handles binary classification by default.",
+      "`BinaryClassificationEvaluator(metricName='areaUnderROC', labelCol='label', rawPredictionCol='rawPrediction')` \u2014 this evaluator is specifically designed for binary classification metrics.",
+      "`RegressionEvaluator(metricName='rmse')` \u2014 ROC curves are computed from regression residuals.",
+      "`ClusteringEvaluator(metricName='silhouette')` \u2014 binary classification evaluates cluster separation."
     ],
     "answer": 1,
     "explanation": "BinaryClassificationEvaluator computes AUC-ROC (areaUnderROC) or AUC-PR (areaUnderPR) for binary classification tasks. It reads from the rawPrediction column (model confidence scores), not the prediction column (hard labels). MulticlassClassificationEvaluator handles multi-class accuracy/F1 but not AUC-ROC."
@@ -89,8 +89,8 @@
     "domain": "Section 3: Spark ML",
     "question": "You have a trained Spark ML PipelineModel and want to save it to DBFS so it can be loaded later. What is the correct method?",
     "options": [
-      "`pickle.dump(pipeline_model, open('/dbfs/models/pipeline.pkl', 'wb'))` — pickle works for Spark objects.",
-      "`pipeline_model.save('/dbfs/models/my_pipeline')` — Spark ML models have a built-in .save() method that persists the model to a distributed filesystem path.",
+      "`pickle.dump(pipeline_model, open('/dbfs/models/pipeline.pkl', 'wb'))` \u2014 pickle works for Spark objects.",
+      "`pipeline_model.save('/dbfs/models/my_pipeline')` \u2014 Spark ML models have a built-in .save() method that persists the model to a distributed filesystem path.",
       "`mlflow.spark.log_model(pipeline_model, 'model')` is the only supported way to persist Spark ML models.",
       "`pipeline_model.write().overwrite().save('/dbfs/models/my_pipeline')` is required when a model already exists at the path."
     ],
@@ -109,6 +109,76 @@
       "StringIndexer converts unseen labels to -1.0 by default, which models handle as a missing value indicator."
     ],
     "answer": 1,
-    "explanation": "By default, StringIndexer raises an exception when it encounters a label not seen during training (handleInvalid='error'). Set handleInvalid='keep' to assign unseen labels to an additional index (numLabels) — useful in production. Use handleInvalid='skip' to drop rows with unseen labels during transform."
+    "explanation": "By default, StringIndexer raises an exception when it encounters a label not seen during training (handleInvalid='error'). Set handleInvalid='keep' to assign unseen labels to an additional index (numLabels) \u2014 useful in production. Use handleInvalid='skip' to drop rows with unseen labels during transform."
+  },
+  {
+    "id": 50,
+    "cert": "associate",
+    "domain": "Section 3: Spark ML",
+    "question": "In Spark ML, a `StringIndexer` converts a `color` column to integer indices [0=red, 1=blue, 2=green]. Why must you apply `OneHotEncoder` before passing this to a linear model?",
+    "options": [
+      "Pass the integer indices directly \u2014 Spark ML handles categorical integers in linear models automatically.",
+      "Apply `OneHotEncoder` to convert integer indices into sparse binary vectors (e.g., [1,0,0] for red). Without it, the linear model treats the integers as ordinal (implying red < blue < green), introducing a false numeric relationship between unrelated categories.",
+      "Apply `VectorAssembler` directly on the StringIndexer output and set `handleInvalid='skip'`.",
+      "Apply `StandardScaler` to normalize the integer indices to zero mean and unit variance."
+    ],
+    "answer": 1,
+    "explanation": "StringIndexer assigns arbitrary integers to categories. A linear model would interpret these as ordinal (red=0, blue=1, green=2 means green is twice as large as blue), which is semantically wrong for nominal categories. OneHotEncoder removes this false ordinality by converting each index to a sparse binary vector, giving each category its own independent coefficient in the linear model."
+  },
+  {
+    "id": 51,
+    "cert": "associate",
+    "domain": "Section 3: Spark ML",
+    "question": "You trained a Spark ML model that classifies news articles into 8 categories. After `pipelineModel.transform(test_df)`, how do you compute the model's accuracy?",
+    "options": [
+      "Use `BinaryClassificationEvaluator(metricName='areaUnderROC')` \u2014 it generalizes to multiclass.",
+      "Use `MulticlassClassificationEvaluator(labelCol='label', predictionCol='prediction', metricName='accuracy')`. It also supports `f1`, `weightedPrecision`, and `weightedRecall` for multi-class tasks.",
+      "Call `model.score(test_df)` as in scikit-learn.",
+      "Use `RegressionEvaluator(metricName='r2')` since accuracy is a ratio."
+    ],
+    "answer": 1,
+    "explanation": "`BinaryClassificationEvaluator` only works for two-class problems (computes AUC-ROC or AUC-PR). `MulticlassClassificationEvaluator` is the correct choice for multi-class problems. It computes standard multiclass metrics (accuracy, weighted F1, weighted precision, weighted recall) on a DataFrame that has both `label` (true) and `prediction` (predicted) columns."
+  },
+  {
+    "id": 52,
+    "cert": "associate",
+    "domain": "Section 3: Spark ML",
+    "question": "In Spark ML hyperparameter tuning, what is the key difference between `CrossValidator` and `TrainValidationSplit`, and when should you prefer `TrainValidationSplit`?",
+    "options": [
+      "They are identical; `CrossValidator` is just the alias used in older Spark versions.",
+      "`CrossValidator` performs k-fold CV (trains k models per param combination, more reliable but k\u00d7 compute). `TrainValidationSplit` uses a single random train/validation split (1 model per combination) \u2014 prefer it when datasets are large and a single reliable split suffices, or when compute budget is the binding constraint.",
+      "`TrainValidationSplit` supports parameter grids; `CrossValidator` only supports random search.",
+      "`CrossValidator` works only for classification; `TrainValidationSplit` supports all ML tasks."
+    ],
+    "answer": 1,
+    "explanation": "`CrossValidator` trains k models per hyperparameter combination, averaging evaluation across k folds \u2014 expensive but statistically robust, especially for small datasets. `TrainValidationSplit` trains one model per combination using a single split \u2014 computationally cheaper. For large datasets (where one split is reliable) or time-constrained pipelines, `TrainValidationSplit` is the pragmatic choice."
+  },
+  {
+    "id": 53,
+    "cert": "associate",
+    "domain": "Section 3: Spark ML",
+    "question": "What does `VectorIndexer` do in a Spark ML pipeline, and when should you use it?",
+    "options": [
+      "VectorIndexer scales all values in a feature vector to the range [0,1], like MinMaxScaler.",
+      "VectorIndexer automatically detects and marks categorical integer features within an assembled vector (columns with fewer than `maxCategories` distinct values). Tree-based models (DecisionTree, RandomForest, GBT) require this to treat those columns as categorical rather than continuous.",
+      "VectorIndexer sorts the feature vector elements in ascending order before training.",
+      "VectorIndexer selects a subset of feature indices from a large vector, similar to feature selection."
+    ],
+    "answer": 1,
+    "explanation": "`VectorIndexer` scans the assembled feature vector and identifies columns with \u2264 `maxCategories` distinct values, tagging them as categorical. Spark ML's tree models use this metadata to make correct split decisions on categorical features (choosing a subset of categories per split rather than a numeric threshold). Without `VectorIndexer`, tree models treat all vector columns as continuous."
+  },
+  {
+    "id": 54,
+    "cert": "associate",
+    "domain": "Section 3: Spark ML",
+    "question": "How do you correctly save a trained Spark ML PipelineModel (including StringIndexer, VectorAssembler, and RandomForestClassifier stages) for production reuse?",
+    "options": [
+      "Use `pickle.dump(pipelineModel, open('model.pkl', 'wb'))` and store in DBFS.",
+      "Call `pipelineModel.write().overwrite().save('/dbfs/models/my_pipeline')` to persist to DBFS or a Unity Catalog volume. Reload with `PipelineModel.load(path)`. For production, log with `mlflow.spark.log_model()` to bundle all preprocessing stages and version them in the Model Registry.",
+      "Call `mlflow.sklearn.log_model(pipelineModel)` since Spark ML implements the scikit-learn interface.",
+      "Export to PMML format with `pipelineModel.toPMML()` and store in Cloud Storage."
+    ],
+    "answer": 1,
+    "explanation": "Spark ML models use Spark's native serialization via `.write().save()` / `PipelineModel.load()`. Pickling does not work because PipelineModel contains JVM objects. For production use, `mlflow.spark.log_model()` bundles the entire pipeline (all preprocessing stages + the model) as an MLflow artifact, versioned and registerable in the Model Registry \u2014 enabling clean deployment and reproducibility."
   }
 ]
