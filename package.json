@@ -1,0 +1,12 @@
+{
+  "name": "databricks-ml-certification",
+  "version": "1.0.0",
+  "description": "Databricks Certified Machine Learning Associate & Professional Study Companion",
+  "main": "server.js",
+  "scripts": {
+    "test": "docker compose up -d --wait && node test.js; docker compose down"
+  },
+  "dependencies": {},
+  "author": "",
+  "license": "ISC"
+}

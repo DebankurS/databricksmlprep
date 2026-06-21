@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Databricks ML Certification Study Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="dark-theme">
+
+  <div class="app-container">
+
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+      <div class="logo-area">
+        <div class="logo-icon">
+          <i class="fa-solid fa-layer-group"></i>
+        </div>
+        <div class="logo-text">
+          <h1>Databricks ML</h1>
+          <span>Study Companion</span>
+        </div>
+      </div>
+
+      <!-- Cert Level Selector -->
+      <div class="cert-selector">
+        <button class="cert-btn active" id="cert-btn-associate" onclick="switchCert('associate')">Associate</button>
+        <button class="cert-btn" id="cert-btn-professional" onclick="switchCert('professional')">Professional</button>
+      </div>
+
+      <nav class="nav-menu">
+        <button class="nav-item active" data-tab="tracker">
+          <i class="fa-solid fa-list-check"></i>
+          <span>Study Tracker</span>
+        </button>
+        <button class="nav-item" data-tab="notes">
+          <i class="fa-solid fa-book-open"></i>
+          <span>Study Guides</span>
+        </button>
+        <button class="nav-item" data-tab="quiz">
+          <i class="fa-solid fa-circle-question"></i>
+          <span>Mock Exam Quiz</span>
+        </button>
+        <button class="nav-item" data-tab="cheatsheet">
+          <i class="fa-solid fa-bolt"></i>
+          <span>Cheat Sheets</span>
+        </button>
+        <button class="nav-item" data-tab="playground">
+          <i class="fa-solid fa-code"></i>
+          <span>Code Playground</span>
+        </button>
+      </nav>
+
+      <div class="progress-widget">
+        <div class="widget-header">
+          <span>Progress</span>
+          <strong id="widget-pct">0%</strong>
+        </div>
+        <div class="widget-bar-outer">
+          <div class="widget-bar-inner" id="widget-bar" style="width: 0%;"></div>
+        </div>
+        <span class="widget-sub" id="widget-sub">Associate exam topics</span>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+
+      <header class="top-bar">
+        <div class="page-title">
+          <h2 id="current-tab-title">Study Tracker</h2>
+          <p id="current-tab-desc">Track your progress across exam sections.</p>
+        </div>
+        <div class="user-actions">
+          <button id="theme-toggle" class="theme-btn" title="Toggle Light/Dark Mode">
+            <i class="fa-solid fa-moon"></i>
+          </button>
+          <a href="https://www.databricks.com/learn/certification" target="_blank" class="btn-primary">
+            <i class="fa-solid fa-arrow-up-right-from-square"></i>
+            <span>Official Guide</span>
+          </a>
+        </div>
+      </header>
+
+      <div class="content-view-container">
+
+        <!-- TAB 1: STUDY TRACKER -->
+        <section id="tab-tracker" class="tab-panel active">
+          <div class="stats-grid">
+            <div class="stat-card">
+              <div class="stat-icon purple"><i class="fa-solid fa-award"></i></div>
+              <div class="stat-info">
+                <h3 id="stat-domain-count">5 Sections</h3>
+                <p id="stat-cert-label">Associate Coverage</p>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon blue"><i class="fa-solid fa-check-double"></i></div>
+              <div class="stat-info">
+                <h3 id="stat-completed-tasks">0 / 0</h3>
+                <p>Topics Completed</p>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon green"><i class="fa-solid fa-chart-line"></i></div>
+              <div class="stat-info">
+                <h3 id="stat-completion-rate">0%</h3>
+                <p>Completion Rate</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Study Scheduler -->
+          <div class="card timeline-card" style="margin-bottom: 2.5rem;">
+            <div class="timeline-header-row">
+              <div class="th-left">
+                <div class="card-header-icon"><i class="fa-solid fa-calendar-days"></i></div>
+                <div>
+                  <h3 style="font-family: var(--font-display); font-size: 1.25rem; font-weight: 700; margin-bottom: 0.15rem;">Study Plan Scheduler</h3>
+                  <p class="card-subtitle" style="margin-bottom: 0 !important;">Generate a day-by-day roadmap for the active certification level.</p>
+                </div>
+              </div>
+              <div class="th-right">
+                <button class="btn-timeline-toggle active" id="plan-btn-14" onclick="setStudyPlanDuration(14)">2-Week Sprint</button>
+                <button class="btn-timeline-toggle" id="plan-btn-28" onclick="setStudyPlanDuration(28)">4-Week Pace</button>
+              </div>
+            </div>
+
+            <div class="timeline-slider-container">
+              <div class="timeline-track" id="timeline-days-track"></div>
+            </div>
+
+            <div class="timeline-day-detail" id="timeline-day-detail-box"></div>
+          </div>
+
+          <!-- Domains Checklist -->
+          <div class="checklist-container" id="domains-checklist"></div>
+        </section>
+
+        <!-- TAB 2: STUDY NOTES -->
+        <section id="tab-notes" class="tab-panel">
+          <div class="notes-layout">
+            <div class="notes-sidebar">
+              <h3 id="notes-sidebar-title">Exam Sections</h3>
+              <ul class="notes-menu" id="notes-menu-list"></ul>
+            </div>
+            <div class="notes-content-area card">
+              <div id="notes-loading" class="loading-state hidden">
+                <i class="fa-solid fa-circle-notch fa-spin"></i>
+                <p>Loading study guide...</p>
+              </div>
+              <div id="notes-view-body" class="markdown-body"></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- TAB 3: MOCK EXAM QUIZ -->
+        <section id="tab-quiz" class="tab-panel">
+          <div class="quiz-container">
+            <div id="quiz-intro-card" class="quiz-card card text-center">
+              <div class="quiz-header-icon">
+                <i class="fa-solid fa-graduation-cap"></i>
+              </div>
+              <h2 id="quiz-intro-title">Databricks ML Associate Quiz Center</h2>
+              <p id="quiz-intro-desc">Test your knowledge with exam-realistic questions spanning all sections of the certification.</p>
+
+              <div class="quiz-settings">
+                <div class="settings-group">
+                  <label for="quiz-mode">Quiz Mode:</label>
+                  <select id="quiz-mode"></select>
+                </div>
+              </div>
+
+              <button id="start-quiz-btn" class="btn-primary btn-lg">
+                <i class="fa-solid fa-play"></i> Start Quiz
+              </button>
+            </div>
+
+            <div id="quiz-running-card" class="quiz-card card hidden">
+              <div class="quiz-progress-bar">
+                <div class="quiz-progress-fill" id="quiz-progress-fill" style="width: 0%;"></div>
+              </div>
+              <div class="quiz-question-header">
+                <span id="quiz-question-number">Question 1 of 10</span>
+                <span id="quiz-question-domain" class="domain-tag">Section 1</span>
+              </div>
+              <h3 id="quiz-question-text" class="question-text">Question text goes here?</h3>
+              <div class="quiz-options" id="quiz-options-list"></div>
+
+              <div class="quiz-feedback-box hidden" id="quiz-feedback-box">
+                <div class="feedback-icon" id="feedback-icon"></div>
+                <div class="feedback-text">
+                  <h4 id="feedback-heading">Correct!</h4>
+                  <p id="feedback-explanation">Explanation details go here.</p>
+                </div>
+              </div>
+
+              <div class="quiz-controls">
+                <span class="quiz-score-indicator" id="quiz-score-indicator">Score: 0/0</span>
+                <button id="quiz-next-btn" class="btn-primary" disabled>
+                  <span>Next Question</span>
+                  <i class="fa-solid fa-arrow-right"></i>
+                </button>
+              </div>
+            </div>
+
+            <div id="quiz-results-card" class="quiz-card card text-center hidden">
+              <div class="results-trophy"><i class="fa-solid fa-trophy"></i></div>
+              <h2>Quiz Completed!</h2>
+              <p class="lead-text">You scored <strong id="results-score">0 / 0</strong> (<strong id="results-percentage">0%</strong>)</p>
+              <div class="results-feedback" id="results-feedback-text"></div>
+              <div class="results-actions">
+                <button id="restart-quiz-btn" class="btn-secondary">
+                  <i class="fa-solid fa-rotate-left"></i> Try Again
+                </button>
+                <button id="quiz-review-tracker-btn" class="btn-primary">
+                  <i class="fa-solid fa-list-check"></i> Back to Tracker
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- TAB 4: CHEATSHEETS -->
+        <section id="tab-cheatsheet" class="tab-panel">
+          <!-- Associate Cheatsheets -->
+          <div id="cheatsheet-associate" class="cheatsheets-grid">
+            <div class="cheatsheet-card card">
+              <div class="card-header-icon"><i class="fa-solid fa-robot"></i></div>
+              <h3>AutoML vs Manual Training</h3>
+              <p class="card-subtitle">Choosing between Databricks AutoML and hand-coded training.</p>
+              <table class="cheat-table">
+                <thead><tr><th>Criteria</th><th>AutoML</th><th>Manual Training</th></tr></thead>
+                <tbody>
+                  <tr><td>Skill Required</td><td>No ML code</td><td>Full ML expertise</td></tr>
+                  <tr><td>Speed</td><td>Minutes to a model</td><td>Hours to days</td></tr>
+                  <tr><td>Customization</td><td>Limited (but editable notebooks)</td><td>Unlimited</td></tr>
+                  <tr><td>Explainability</td><td>SHAP auto-generated</td><td>Manual config</td></tr>
+                  <tr><td>Best For</td><td>Baselines, rapid prototyping</td><td>Production, custom architectures</td></tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="cheatsheet-card card">
+              <div class="card-header-icon"><i class="fa-solid fa-sitemap"></i></div>
+              <h3>Spark ML Pipeline Stages</h3>
+              <p class="card-subtitle">Order and role of each stage type.</p>
+              <div class="metric-bullets">
+                <div class="metric-bullet">
+                  <div class="mb-title">Transformer (e.g. VectorAssembler, StringIndexerModel)</div>
+                  <div class="mb-desc">Stateless or already fitted. Has .transform(df). Does not learn from data.</div>
+                </div>
+                <div class="metric-bullet">
+                  <div class="mb-title">Estimator (e.g. LogisticRegression, StringIndexer)</div>
+                  <div class="mb-desc">Has .fit(df) → returns a Transformer (Model). Learns parameters from training data.</div>
+                </div>
+                <div class="metric-bullet">
+                  <div class="mb-title">Pipeline.fit(train) → PipelineModel</div>
+                  <div class="mb-desc">Fits all Estimators in sequence. Call .transform(test) on the PipelineModel for inference.</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="cheatsheet-card card">
+              <div class="card-header-icon"><i class="fa-solid fa-layer-group"></i></div>
+              <h3>MLflow Logging Functions</h3>
+              <p class="card-subtitle">Know exactly what each function stores.</p>
+              <table class="cheat-table">
+                <thead><tr><th>Function</th><th>What It Stores</th><th>Example</th></tr></thead>
+                <tbody>
+                  <tr><td><code>log_param(k,v)</code></td><td>Hyperparameter (pre-training config)</td><td>lr=0.01, max_depth=5</td></tr>
+                  <tr><td><code>log_metric(k,v,step)</code></td><td>Numeric value (logged per epoch)</td><td>val_auc=0.87 at step 10</td></tr>
+                  <tr><td><code>log_artifact(path)</code></td><td>File or directory</td><td>confusion_matrix.png</td></tr>
+                  <tr><td><code>log_model(model,...)</code></td><td>Serialized model + metadata</td><td>sklearn model artifact</td></tr>
+                  <tr><td><code>set_tag(k,v)</code></td><td>String metadata label</td><td>team=mlops</td></tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="cheatsheet-card card">
+              <div class="card-header-icon"><i class="fa-solid fa-bolt"></i></div>
+              <h3>Hyperopt: Trials vs SparkTrials</h3>
+              <p class="card-subtitle">Parallelism and integration differences.</p>
+              <div class="skew-drift-box">
+                <div class="sd-block">
+                  <strong>Trials (Sequential)</strong>
+                  <p>Runs HPO trials one at a time on the driver node. Use for small datasets or when Spark workers aren't needed. No cluster cost beyond driver.</p>
+                  <span>Best for: non-distributed models, quick experiments.</span>
+                </div>
+                <hr>
+                <div class="sd-block">
+                  <strong>SparkTrials (Parallel)</strong>
+                  <p>Distributes trials as Spark tasks across workers. Use parallelism= to set concurrency. Auto-logs to MLflow on Databricks.</p>
+                  <span>Best for: scikit-learn/XGBoost HPO at scale, large search spaces.</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="cheatsheet-card card">
+              <div class="card-header-icon"><i class="fa-solid fa-database"></i></div>
+              <h3>Feature Store Key Concepts</h3>
+              <table class="cheat-table">
+                <thead><tr><th>Concept</th><th>Purpose</th></tr></thead>
+                <tbody>
+                  <tr><td><strong>Feature Table</strong></td><td>Delta table with registered features + primary key</td></tr>
+                  <tr><td><strong>Primary Key</strong></td><td>Entity identifier (e.g. customer_id)</td></tr>
+                  <tr><td><strong>Timestamp Key</strong></td><td>Enables point-in-time lookup (prevents leakage)</td></tr>
+                  <tr><td><strong>Training Set</strong></td><td>Joined features + labels at correct historical time</td></tr>
+                  <tr><td><strong>Online Store</strong></td><td>Low-latency lookup at inference time</td></tr>
+                  <tr><td><strong>log_model (FS)</strong></td><td>Attaches feature retrieval spec to model for serving</td></tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="cheatsheet-card card">
+              <div class="card-header-icon"><i class="fa-solid fa-scale-balanced"></i></div>
+              <h3>MLflow Registry Stages</h3>
+              <p class="card-subtitle">Model version lifecycle states.</p>
+              <div class="metric-bullets">
+                <div class="metric-bullet">
+                  <div class="mb-title">None → Staging</div>
+                  <div class="mb-desc">New version under evaluation. Automated testing runs here. Not serving production traffic.</div>
+                </div>
+                <div class="metric-bullet">
+                  <div class="mb-title">Staging → Production</div>
+                  <div class="mb-desc">Validated, serving live traffic. Load via `models:/Name/Production`. Only one version per stage at a time.</div>
+                </div>
+                <div class="metric-bullet">
+                  <div class="mb-title">→ Archived</div>
+                  <div class="mb-desc">Retired version. Kept for audit/rollback. Not actively served. Use Aliases in Unity Catalog instead of stages.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Professional Cheatsheets -->
+          <div id="cheatsheet-professional" class="cheatsheets-grid hidden">
+            <div class="cheatsheet-card card">
+              <div class="card-header-icon"><i class="fa-solid fa-code-branch"></i></div>
+              <h3>Stages vs Aliases in Model Registry</h3>
+              <p class="card-subtitle">Unity Catalog deprecates stages; use aliases.</p>
+              <div class="skew-drift-box">
+                <div class="sd-block">
+                  <strong>Stages (Legacy)</strong>
+                  <p>Fixed enum: None / Staging / Production / Archived. One version per stage. Deprecated in Unity Catalog model registry.</p>
+                  <span>Load: mlflow.pyfunc.load_model("models:/MyModel/Production")</span>
+                </div>
+                <hr>
+                <div class="sd-block">
+                  <strong>Aliases (Preferred in UC)</strong>
+                  <p>User-defined names (champion, challenger, shadow) pointing to any version. Multiple aliases can coexist on different versions simultaneously.</p>
+                  <span>Load: mlflow.pyfunc.load_model("models:/catalog.schema.Model@champion")</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="cheatsheet-card card">
+              <div class="card-header-icon"><i class="fa-solid fa-tower-broadcast"></i></div>
+              <h3>Deployment Pattern Selection</h3>
+              <table class="cheat-table">
+                <thead><tr><th>Pattern</th><th>Latency</th><th>Use Case</th></tr></thead>
+                <tbody>
+                  <tr><td><strong>Batch Inference</strong></td><td>Minutes–Hours</td><td>Daily scoring, nightly reports, large-scale pre-compute</td></tr>
+                  <tr><td><strong>Streaming (Structured Streaming)</strong></td><td>Seconds</td><td>IoT events, clickstream, Kafka-driven near-real-time</td></tr>
+                  <tr><td><strong>Real-time Serving</strong></td><td>&lt;100ms</td><td>Fraud detection, recommendation APIs, interactive apps</td></tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="cheatsheet-card card">
+              <div class="card-header-icon"><i class="fa-solid fa-magnifying-glass-chart"></i></div>
+              <h3>Drift Types & Detection</h3>
+              <div class="metric-bullets">
+                <div class="metric-bullet">
+                  <div class="mb-title">Data Drift (Covariate Shift) — P(X) changes</div>
+                  <div class="mb-desc">Input feature distributions shift. Detected via PSI, KL divergence on feature columns. May or may not degrade model.</div>
+                </div>
+                <div class="metric-bullet">
+                  <div class="mb-title">Concept Drift — P(Y|X) changes</div>
+                  <div class="mb-desc">Feature-label relationship changes. Detected only via labeled production data. Requires retraining. Most impactful.</div>
+                </div>
+                <div class="metric-bullet">
+                  <div class="mb-title">Label Drift — P(Y) changes</div>
+                  <div class="mb-desc">Target distribution shifts (e.g. churn rate changes from 5% to 20%). Monitor prediction distribution as proxy when labels delayed.</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="cheatsheet-card card">
+              <div class="card-header-icon"><i class="fa-solid fa-webhook"></i></div>
+              <h3>Model Registry Webhook Events</h3>
+              <table class="cheat-table">
+                <thead><tr><th>Event</th><th>Trigger</th></tr></thead>
+                <tbody>
+                  <tr><td>MODEL_VERSION_CREATED</td><td>New version registered</td></tr>
+                  <tr><td>MODEL_VERSION_TRANSITIONED_STAGE</td><td>Version moved to Staging/Production/Archived</td></tr>
+                  <tr><td>TRANSITION_REQUEST_CREATED</td><td>User requests a stage transition (approval workflow)</td></tr>
+                  <tr><td>MODEL_VERSION_TAG_SET</td><td>Tag added/updated on a version</td></tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="cheatsheet-card card">
+              <div class="card-header-icon"><i class="fa-solid fa-circle-nodes"></i></div>
+              <h3>PSI Thresholds for Drift</h3>
+              <p class="card-subtitle">Population Stability Index decision rules.</p>
+              <div class="metric-bullets">
+                <div class="metric-bullet">
+                  <div class="mb-title">PSI &lt; 0.1 — Stable</div>
+                  <div class="mb-desc">No significant distribution shift. Continue monitoring at normal frequency.</div>
+                </div>
+                <div class="metric-bullet">
+                  <div class="mb-title">PSI 0.1 – 0.25 — Moderate Shift</div>
+                  <div class="mb-desc">Some change detected. Increase monitoring frequency and investigate data pipeline.</div>
+                </div>
+                <div class="metric-bullet">
+                  <div class="mb-title">PSI &gt; 0.25 — Major Shift</div>
+                  <div class="mb-desc">Significant distribution change. Trigger investigation and likely retraining pipeline.</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="cheatsheet-card card">
+              <div class="card-header-icon"><i class="fa-solid fa-gears"></i></div>
+              <h3>ML CI/CD Pipeline Stages</h3>
+              <div class="skew-drift-box">
+                <div class="sd-block">
+                  <strong>CI — Continuous Integration</strong>
+                  <p>Git push → run unit tests → run training job → log to MLflow → register model in Staging.</p>
+                  <span>Validates: code correctness, model performance meets threshold.</span>
+                </div>
+                <hr>
+                <div class="sd-block">
+                  <strong>CD — Continuous Delivery</strong>
+                  <p>Staging model → automated validation job → if passes, promote alias to Production → downstream serving picks up new version.</p>
+                  <span>Validates: holdout test performance, latency, integration tests.</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- TAB 5: CODE PLAYGROUND -->
+        <section id="tab-playground" class="tab-panel">
+          <div class="playground-layout">
+            <div class="playground-selector card">
+              <h3>Select Template Snippet</h3>
+              <p>Production-level code patterns for Databricks ML workflows.</p>
+
+              <div class="snippet-buttons" id="snippet-btn-container">
+                <button class="snippet-btn active" data-file="mlflow_tracking.py">
+                  <i class="fa-solid fa-chart-line"></i>
+                  <div class="sb-text">
+                    <strong>MLflow Experiment Tracking</strong>
+                    <span>Params, metrics, models, nested runs</span>
+                  </div>
+                </button>
+                <button class="snippet-btn" data-file="spark_ml_pipeline.py">
+                  <i class="fa-solid fa-sitemap"></i>
+                  <div class="sb-text">
+                    <strong>Spark ML Pipeline</strong>
+                    <span>StringIndexer → VectorAssembler → GBT + CV</span>
+                  </div>
+                </button>
+                <button class="snippet-btn" data-file="delta_feature_store.py">
+                  <i class="fa-solid fa-database"></i>
+                  <div class="sb-text">
+                    <strong>Delta + Feature Store</strong>
+                    <span>Feature registration, training set, batch inference</span>
+                  </div>
+                </button>
+              </div>
+            </div>
+
+            <div class="playground-viewer card">
+              <div class="viewer-header">
+                <span class="file-name-tag" id="current-snippet-name">mlflow_tracking.py</span>
+                <button class="btn-icon" id="copy-snippet-btn" title="Copy Code">
+                  <i class="fa-regular fa-copy"></i>
+                  <span>Copy</span>
+                </button>
+              </div>
+              <div class="viewer-body">
+                <pre><code id="snippet-code-block" class="language-python">-- Code will load here --</code></pre>
+              </div>
+            </div>
+          </div>
+        </section>
+
+      </div>
+    </main>
+  </div>
+
+  <script src="questions.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
