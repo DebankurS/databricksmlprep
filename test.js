@@ -70,7 +70,15 @@ async function runTests() {
   const notFound = await get("/nonexistent.txt");
   assert(notFound.status === 404, "GET /nonexistent.txt returns 404");
 
-  const traversal = await get("/../server.js");
+  const traversal = await new Promise((resolve, reject) => {
+    const req = http.request({ host: "localhost", port: 3002, path: "/../server.js" }, res => {
+      let body = "";
+      res.on("data", d => (body += d));
+      res.on("end", () => resolve({ status: res.statusCode, body }));
+    });
+    req.on("error", reject);
+    req.end();
+  });
   assert(traversal.status === 403, "Path traversal attempt returns 403");
 
   // -----------------------------------------------------------------------

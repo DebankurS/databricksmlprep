@@ -32,6 +32,10 @@ http.createServer((req, res) => {
     return;
   }
 
+  if (req.url.includes('..')) {
+    res.writeHead(403); res.end(); return;
+  }
+
   if (url.pathname === '/api/progress') {
     res.setHeader('Content-Type', 'application/json');
     if (req.method === 'GET') {
