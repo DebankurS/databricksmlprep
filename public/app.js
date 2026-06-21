@@ -936,11 +936,18 @@ function loadNotesDoc(filename) {
   bodyEl.classList.add("hidden");
   fetch(`./docs/${activeCert}/${filename}`)
     .then(r => { if (!r.ok) throw new Error("not found"); return r.text(); })
-    .then(md => { bodyEl.innerHTML = parseSimpleMarkdown(md); loaderEl.classList.add("hidden"); bodyEl.classList.remove("hidden"); })
+    .then(md => {
+      bodyEl.innerHTML = parseSimpleMarkdown(md);
+      loaderEl.classList.add("hidden");
+      bodyEl.classList.remove("hidden");
+      if (window.Prism) Prism.highlightAllUnder(bodyEl);
+    })
     .catch(() => {
       const key = `${activeCert}/${filename}`;
       bodyEl.innerHTML = NOTES_OFFLINE_FALLBACK[key] || "<h3>Content not found.</h3>";
-      loaderEl.classList.add("hidden"); bodyEl.classList.remove("hidden");
+      loaderEl.classList.add("hidden");
+      bodyEl.classList.remove("hidden");
+      if (window.Prism) Prism.highlightAllUnder(bodyEl);
     });
 }
 
@@ -948,7 +955,7 @@ function parseSimpleMarkdown(md) {
   let html = md;
   html = html.replace(/```mermaid[\s\S]*?```/g, '');
   const codeBlocks = [];
-  html = html.replace(/```(?:[a-zA-Z0-9_\-]+)?\n([\s\S]*?)```/g, (_, c) => { codeBlocks.push(c); return `__CB_${codeBlocks.length - 1}__`; });
+  html = html.replace(/```([a-zA-Z0-9_\-]+)?\n([\s\S]*?)```/g, (_, lang, c) => { codeBlocks.push({ lang: lang || 'text', content: c }); return `__CB_${codeBlocks.length - 1}__`; });
   const inlineCodes = [];
   html = html.replace(/`([^`]+)`/g, (_, c) => { inlineCodes.push(c); return `__IC_${inlineCodes.length - 1}__`; });
   html = html.replace(/^# (.*?)$/gm, '<h1>$1</h1>');
@@ -987,7 +994,7 @@ function parseSimpleMarkdown(md) {
   html = lines.join('\n');
   const esc = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   inlineCodes.forEach((c, i) => { html = html.replace(`__IC_${i}__`, () => `<code>${esc(c)}</code>`); });
-  codeBlocks.forEach((c, i) => { html = html.replace(`__CB_${i}__`, () => `<pre><code>${esc(c)}</code></pre>`); });
+  codeBlocks.forEach((block, i) => { html = html.replace(`__CB_${i}__`, () => `<pre><code class="language-${block.lang}">${esc(block.content)}</code></pre>`); });
   return html;
 }
 
@@ -1148,8 +1155,14 @@ function loadCodeSnippet(filename) {
   codeEl.className = "language-python";
   fetch(`./src/snippets/${filename}`)
     .then(r => { if (!r.ok) throw new Error("not found"); return r.text(); })
-    .then(code => { codeEl.textContent = code; })
-    .catch(() => { codeEl.textContent = SNIPPET_OFFLINE_FALLBACK[filename] || "# Snippet not found offline."; });
+    .then(code => {
+      codeEl.textContent = code;
+      if (window.Prism) Prism.highlightElement(codeEl);
+    })
+    .catch(() => {
+      codeEl.textContent = SNIPPET_OFFLINE_FALLBACK[filename] || "# Snippet not found offline.";
+      if (window.Prism) Prism.highlightElement(codeEl);
+    });
 }
 
 // =========================================================================

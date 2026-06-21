@@ -18,13 +18,14 @@ databricks-ml-certification/
 ├── docker-compose.yml     node:22-alpine container
 ├── package.json           npm test = docker compose + test.js
 ├── test.js                Integration tests (validates questions, docs, API)
+├── TODO.md                Tracks remaining fixes and inconsistencies
 ├── data/
 │   └── .gitkeep           Progress storage directory (progress.json written here)
 └── public/
     ├── index.html         SPA shell with cert switcher in sidebar
     ├── app.js             All SPA logic — cert switching, quiz, tracker, scheduler
     ├── style.css          Databricks Red (#FF3621) CSS design system
-    ├── questions.js       65 questions (35 associate + 30 professional)
+    ├── questions.js       67 questions (35 associate + 32 professional)
     ├── docs/
     │   ├── associate/     5 markdown study guide files
     │   └── professional/  4 markdown study guide files
@@ -124,7 +125,15 @@ npm test
 # Runs: docker compose up -d --wait && node test.js; docker compose down
 ```
 
-Test validates: HTTP status codes, all 9 doc files, 3 snippets, question schema (65+ total, 30+ per cert), progress API round-trip, file structure.
+Test validates: HTTP status codes, all 9 doc files, 3 snippets, question schema (exactly 67 total: 35 associate + 32 professional), progress API round-trip, file structure. Adding or removing questions will fail the test suite.
+
+---
+
+## Keeping TODO.md current
+
+When completing any task listed in `TODO.md`, mark it done immediately:
+- Change `- [ ]` to `- [x]` for the completed item.
+- Do this in the same step as the fix — do not leave it for later.
 
 ---
 

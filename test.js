@@ -159,14 +159,30 @@ async function runTests() {
   }
 
   assert(Array.isArray(PRACTICE_QUESTIONS), "PRACTICE_QUESTIONS is an array");
-  assert(PRACTICE_QUESTIONS.length >= 60, `Total questions >= 60 (got ${PRACTICE_QUESTIONS.length})`);
+  assert(PRACTICE_QUESTIONS.length === 71, `Total questions === 71 (got ${PRACTICE_QUESTIONS.length})`);
 
   const associateQs = PRACTICE_QUESTIONS.filter(q => q.cert === "associate");
   const professionalQs = PRACTICE_QUESTIONS.filter(q => q.cert === "professional");
-  assert(associateQs.length >= 30, `Associate questions >= 30 (got ${associateQs.length})`);
-  assert(professionalQs.length >= 30, `Professional questions >= 30 (got ${professionalQs.length})`);
+  assert(associateQs.length === 35, `Associate questions === 35 (got ${associateQs.length})`);
+  assert(professionalQs.length === 36, `Professional questions === 36 (got ${professionalQs.length})`);
 
   // Validate schema for each question
+  const VALID_DOMAINS_BY_CERT = {
+    associate: new Set([
+      "Section 1: Databricks ML Platform",
+      "Section 2: ML Workflows",
+      "Section 3: Spark ML",
+      "Section 4: Scaling ML Models",
+      "Section 5: MLflow Model Lifecycle"
+    ]),
+    professional: new Set([
+      "Section 1: Experimentation",
+      "Section 2: Model Lifecycle Management",
+      "Section 3: Model Deployment",
+      "Section 4: Solution & Data Monitoring"
+    ])
+  };
+
   const requiredFields = ["id", "cert", "domain", "question", "options", "answer", "explanation"];
   let schemaErrors = 0;
   PRACTICE_QUESTIONS.forEach(q => {
@@ -176,6 +192,11 @@ async function runTests() {
     if (!Array.isArray(q.options) || q.options.length < 4) schemaErrors++;
     if (typeof q.answer !== "number" || q.answer < 0 || q.answer >= (q.options || []).length) schemaErrors++;
     if (!["associate", "professional"].includes(q.cert)) schemaErrors++;
+    const validDomainsForCert = VALID_DOMAINS_BY_CERT[q.cert];
+    if (validDomainsForCert && !validDomainsForCert.has(q.domain)) {
+      console.error(`    Domain mismatch: question id=${q.id} cert="${q.cert}" domain="${q.domain}"`);
+      schemaErrors++;
+    }
   });
   assert(schemaErrors === 0, `All question schemas valid (0 errors, found ${schemaErrors})`);
 

@@ -975,6 +975,62 @@ const PRACTICE_QUESTIONS = [
     ],
     answer: 1,
     explanation: "Monitoring the prediction distribution (output drift) is a critical supplement to input feature monitoring. A sudden shift in predicted positive rate (churn from 5% → 25%) is a strong signal of either input drift, concept drift, or a data pipeline bug — even if no individual feature shows significant PSI. Lakehouse Monitoring can monitor the prediction column as just another feature column. Option D (business rule) is a valid complementary alert but less statistically rigorous."
+  },
+  {
+    id: 133,
+    cert: "professional",
+    domain: "Section 4: Solution & Data Monitoring",
+    question: "You want to validate a new model in production without exposing all users to it. Describe how to implement a shadow deployment (dark launch) on Databricks Model Serving, and when you would graduate the shadow model to champion.",
+    options: [
+      "Shadow deployment is not supported on Databricks Model Serving — use A/B testing instead, which exposes a random 10% of traffic to the challenger model.",
+      "In a shadow deployment, the current champion model serves all live traffic and returns responses to users. Simultaneously, all requests are mirrored to the challenger model, whose predictions are logged but never returned to users. On Databricks, implement this via a wrapper endpoint or a DLT/Structured Streaming pipeline that duplicates prediction requests to both models, logging both outputs to Delta. Graduate the challenger to champion when its offline metrics on logged shadow predictions match or exceed the champion's.",
+      "Shadow mode means deploying the new model behind a feature flag only for internal employees before a general rollout.",
+      "Use MLflow's A/B testing API to route 0% traffic to the challenger — this creates a shadow deployment automatically."
+    ],
+    answer: 1,
+    explanation: "Shadow (dark launch) deployment: all user traffic is served by the champion; requests are also sent to the challenger, but only the champion's response is returned. The challenger's outputs are logged for offline comparison. This is zero-risk validation of challenger inference speed, output distribution, and error rate under real production load. Graduate when champion and challenger metrics converge or challenger wins on held-out shadow logs."
+  },
+  {
+    id: 134,
+    cert: "professional",
+    domain: "Section 4: Solution & Data Monitoring",
+    question: "Your team runs an A/B test between a champion and challenger model for 2 weeks. The challenger shows a 3% lift in conversion on the test cohort. How do you determine if this lift is statistically significant before promoting the challenger?",
+    options: [
+      "3% lift is always significant — promote the challenger immediately.",
+      "Run a two-proportion z-test (or chi-squared test for binary outcomes) on the conversion rates of the control and treatment groups. Compute the p-value; if p < 0.05 (or your chosen significance threshold), the lift is statistically significant. Also check practical significance: is 3% lift large enough to justify the operational cost of switching models? Consider running the test longer if the sample size is insufficient for the desired statistical power.",
+      "Compare average conversion rates between groups using a paired t-test on daily cohort averages, then promote if the t-statistic exceeds 1.0.",
+      "Statistical significance testing is unnecessary for model A/B tests — use business intuition to decide if 3% is meaningful."
+    ],
+    answer: 1,
+    explanation: "For binary outcomes (converted/not), a two-proportion z-test or chi-squared test is appropriate. Key concepts: (1) null hypothesis: champion and challenger have equal conversion rates; (2) p-value < 0.05 → reject null, lift is statistically significant; (3) statistical power (≥0.8) requires sufficient sample size — compute minimum sample size before starting; (4) also assess practical significance: a statistically significant but tiny lift may not justify deployment overhead."
+  },
+  {
+    id: 135,
+    cert: "professional",
+    domain: "Section 4: Solution & Data Monitoring",
+    question: "A compliance team requires that your production ML model provide explanations for individual predictions flagged for manual review. How do you serve per-prediction explanations at inference time on Databricks?",
+    options: [
+      "Explanations cannot be served at inference time — run SHAP analysis offline in batch as a separate job after predictions are made.",
+      "Wrap the model in a custom MLflow PythonModel that computes SHAP values (using shap.Explainer) for each prediction at inference time and returns both the prediction and a feature attribution dict. Register this explainable wrapper in the Model Registry and deploy it to Databricks Model Serving. For latency-sensitive endpoints, precompute SHAP background datasets and use TreeExplainer (for tree models) or a fast approximation (shap.LinearExplainer) to minimize overhead.",
+      "Use Feature Store's built-in explanation API — it automatically generates SHAP values for any model that reads from the Feature Store.",
+      "Set model_explainability=True in the MLflow autolog call; MLflow will automatically add SHAP values to all prediction responses."
+    ],
+    answer: 1,
+    explanation: "Serving per-prediction explanations: wrap the model as a custom MLflow PythonModel whose predict() method returns {prediction, shap_values, feature_names}. Use shap.TreeExplainer for gradient boosting/random forest (fast), shap.LinearExplainer for linear models, or shap.KernelExplainer as a model-agnostic fallback (slow — avoid at inference time). Deploy to Model Serving. For high-throughput endpoints, consider async explanation jobs triggered by prediction IDs rather than synchronous computation."
+  },
+  {
+    id: 136,
+    cert: "professional",
+    domain: "Section 4: Solution & Data Monitoring",
+    question: "You need to set up alerting for a production model so that on-call engineers are notified when model quality degrades. What are the key metrics to alert on, and how do you implement alerting on Databricks?",
+    options: [
+      "Alert only on infrastructure metrics (CPU, memory, GPU utilization) — model quality metrics are too noisy for operational alerts.",
+      "Alert on a combination of: (1) data drift metrics (PSI > 0.25 on key features, monitored via Lakehouse Monitoring drift_metrics table); (2) output drift (prediction distribution shift > threshold); (3) delayed-label quality metrics (accuracy/AUC drop > X% vs. baseline, when ground truth is available); (4) pipeline health (null rate spike, record count drop). Implement via DBSQL Alerts querying the Lakehouse Monitoring Delta tables — configure alerts to trigger webhooks to PagerDuty/Slack, or use Databricks notification destinations.",
+      "Use MLflow's built-in alerting module to set thresholds on logged metrics — it automatically pages on-call when a metric degrades.",
+      "Monitor only latency (p95 response time) and error rate from the Model Serving endpoint — these proxy model quality without needing labels."
+    ],
+    answer: 1,
+    explanation: "Production ML alerting requires multiple signal types: (a) data health signals (null rates, row counts, schema changes); (b) distribution signals (PSI/drift on inputs and outputs); (c) quality signals (accuracy/AUC on delayed labels, when available); (d) serving health (latency, error rate). Databricks implementation: Lakehouse Monitoring writes to Delta tables → DBSQL Alert queries those tables on schedule → alert fires webhook to PagerDuty/Slack or uses a Databricks notification destination to trigger a retraining job."
   }
 ];
 
