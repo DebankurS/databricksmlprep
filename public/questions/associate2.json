@@ -1,0 +1,100 @@
+[
+  {
+    "id": 8,
+    "cert": "associate",
+    "domain": "Section 2: ML Workflows",
+    "question": "You are preparing a training dataset that contains a categorical feature `city` with 500 unique values. You are training a gradient boosting model. Which encoding technique is most appropriate?",
+    "options": [
+      "One-hot encoding, because tree-based models require binary feature representations.",
+      "Target encoding (mean encoding), which replaces each category with the mean target value for that category, and is efficient for high-cardinality categoricals with tree models.",
+      "Label encoding with integer assignment, which is always appropriate for all model types.",
+      "Binary encoding, which converts each category to a binary string representation."
+    ],
+    "answer": 1,
+    "explanation": "Target encoding (mean encoding) is appropriate for high-cardinality categorical features with tree-based models. One-hot encoding with 500 categories creates 500 sparse columns, causing high dimensionality. Target encoding replaces each category with a statistic (e.g., mean target value) derived from the training labels, keeping dimensionality low. Apply smoothing to avoid target leakage on low-frequency categories."
+  },
+  {
+    "id": 9,
+    "cert": "associate",
+    "domain": "Section 2: ML Workflows",
+    "question": "A dataset for fraud detection contains 99.9% non-fraud and 0.1% fraud cases. A model trained on this data achieves 99.9% accuracy. Why is this metric misleading and which metric should be used instead?",
+    "options": [
+      "Accuracy is misleading because it does not account for model complexity. Use BIC or AIC instead.",
+      "Accuracy is misleading because a model predicting all non-fraud achieves 99.9% by default. Use F1-score or precision-recall AUC, which account for class imbalance.",
+      "Accuracy is misleading because neural networks cannot be evaluated this way. Use cross-entropy loss instead.",
+      "Accuracy is not misleading; the model is simply well-calibrated and ready for production."
+    ],
+    "answer": 1,
+    "explanation": "On a 99.9%/0.1% split, a trivial model predicting 'non-fraud' for every case achieves 99.9% accuracy. Accuracy fails completely on imbalanced datasets. Use F1-score (harmonic mean of precision and recall) or precision-recall AUC, which explicitly evaluate the model's ability to correctly identify minority-class examples."
+  },
+  {
+    "id": 10,
+    "cert": "associate",
+    "domain": "Section 2: ML Workflows",
+    "question": "During model training, you observe that training accuracy is 98% but validation accuracy is 72%. What does this indicate, and what should you do?",
+    "options": [
+      "This indicates underfitting. You should increase model complexity by adding more layers or features.",
+      "This indicates overfitting (high variance). You should apply regularization (L1/L2), dropout, reduce model complexity, collect more training data, or use early stopping.",
+      "This indicates a data pipeline bug. You should re-shuffle and re-split the dataset.",
+      "This indicates the validation set is too small. Increasing the validation set size will fix the gap."
+    ],
+    "answer": 1,
+    "explanation": "A large gap between training and validation accuracy (98% vs 72%) is the classic sign of overfitting: the model memorized training data but fails to generalize. Remedies include regularization (L1/L2 penalization, dropout for NNs), reducing model complexity, collecting more training data, or using early stopping based on validation loss."
+  },
+  {
+    "id": 11,
+    "cert": "associate",
+    "domain": "Section 2: ML Workflows",
+    "question": "You are using scikit-learn to preprocess features with `StandardScaler` before training. What is the correct procedure to avoid data leakage from the preprocessing step?",
+    "options": [
+      "Call `scaler.fit_transform()` on the full dataset before splitting into train and test sets.",
+      "Call `scaler.fit_transform(X_train)` on the training set, then call `scaler.transform(X_test)` on the test set using the same fitted scaler.",
+      "Fit a separate scaler on X_train and another on X_test to ensure both sets are independently standardized.",
+      "Call `scaler.fit(X_test)` first to capture the production data distribution, then apply it to X_train."
+    ],
+    "answer": 1,
+    "explanation": "The correct pattern is `fit_transform` on training data only (so scaler learns mean/std from training), then `transform` on test data using the same scaler. Fitting on the full dataset leaks test statistics into training; fitting separate scalers misrepresents production behavior."
+  },
+  {
+    "id": 12,
+    "cert": "associate",
+    "domain": "Section 2: ML Workflows",
+    "question": "You need to compare three candidate models and select the best one using k-fold cross-validation. Your dataset has 10,000 rows. Which setup is most appropriate?",
+    "options": [
+      "Use a single 80/20 train-test split for each model, compare test accuracy, and pick the highest.",
+      "Use 5-fold or 10-fold cross-validation: train each model k times on different folds, average the validation scores, and select the model with the best mean score across folds.",
+      "Use leave-one-out cross-validation (LOOCV) for maximum data efficiency.",
+      "Randomly shuffle the dataset 3 times, train each model on each shuffle, and average scores."
+    ],
+    "answer": 1,
+    "explanation": "K-fold cross-validation (5 or 10 folds is standard for 10K rows) provides a more reliable estimate of generalization performance than a single train-test split by averaging over multiple held-out folds. LOOCV is computationally expensive for 10K rows and generally not needed."
+  },
+  {
+    "id": 13,
+    "cert": "associate",
+    "domain": "Section 2: ML Workflows",
+    "question": "A regression model predicts house prices. The RMSE on the test set is $50,000. What does this metric represent and when is it preferable to MAE?",
+    "options": [
+      "RMSE is the mean absolute difference between predictions and actuals. It is always better than MAE.",
+      "RMSE is the square root of the mean squared errors. It penalizes large errors more heavily than MAE because of squaring. Prefer RMSE when large prediction errors are disproportionately costly.",
+      "RMSE measures the proportion of variance explained by the model (like R²). Use it when comparing models on different datasets.",
+      "RMSE and MAE are equivalent metrics; the choice is purely cosmetic."
+    ],
+    "answer": 1,
+    "explanation": "RMSE squares errors before averaging, which means large errors contribute disproportionately to the metric. This makes RMSE preferable when large prediction errors are especially costly (e.g., extreme underpricing a house). MAE treats all errors equally and is more robust to outliers."
+  },
+  {
+    "id": 14,
+    "cert": "associate",
+    "domain": "Section 2: ML Workflows",
+    "question": "A model needs to be evaluated with stratified k-fold cross-validation. Why is stratification important for classification tasks?",
+    "options": [
+      "Stratification ensures each fold contains the same number of samples, regardless of class distribution.",
+      "Stratified k-fold preserves the original class distribution in each fold, preventing folds where a minority class is completely absent, which would cause misleading evaluation metrics.",
+      "Stratification randomizes the fold assignment using a fixed seed for reproducibility.",
+      "Stratified k-fold is required only for regression tasks to ensure target value distribution is maintained across folds."
+    ],
+    "answer": 1,
+    "explanation": "Stratified k-fold ensures each fold maintains approximately the same class distribution as the full dataset. Without stratification, a fold might contain no examples of a rare class, making precision/recall/AUC metrics undefined or misleading for that class."
+  }
+]

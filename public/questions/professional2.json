@@ -1,0 +1,128 @@
+[
+  {
+    "id": 110,
+    "cert": "professional",
+    "domain": "Section 2: Model Lifecycle Management",
+    "question": "Your organization uses Unity Catalog. A model trained in workspace A needs to be discoverable and deployable from workspace B in the same metastore. What is the correct approach in Unity Catalog?",
+    "options": [
+      "Export the model artifact from the workspace A MLflow experiment as a ZIP file and import it into workspace B manually.",
+      "Register the model in the Unity Catalog model registry (not the workspace-local registry) using the three-level namespace `catalog.schema.model_name`. Workspace B can then load it via `mlflow.pyfunc.load_model('models:/catalog.schema.model_name/version')` without any data movement.",
+      "Use Databricks CLI to copy the model from workspace A's DBFS to workspace B's DBFS.",
+      "Grant workspace B users the `CAN_READ` permission on workspace A's MLflow experiment."
+    ],
+    "answer": 1,
+    "explanation": "Unity Catalog model registry provides cross-workspace model governance. Registering in UC (using `catalog.schema.model_name` namespace) makes the model available to all workspaces sharing the same metastore. Users in workspace B load the model using the same URI. This is the recommended approach for multi-workspace organizations vs. workspace-local MLflow registry."
+  },
+  {
+    "id": 111,
+    "cert": "professional",
+    "domain": "Section 2: Model Lifecycle Management",
+    "question": "You need to implement an automated model validation gate: before a model is promoted from Staging to Production in the Model Registry, it must achieve AUC > 0.85 on a held-out validation dataset. How should this be implemented?",
+    "options": [
+      "Add a manual approval step in Jira where a data scientist reviews the AUC value and clicks 'Approve'.",
+      "Use a Databricks Job (or CI pipeline step) that: (1) loads the Staging model via mlflow.pyfunc.load_model, (2) evaluates it on the validation dataset, (3) if AUC > 0.85 calls client.transition_model_version_stage() to promote to Production, else archives the model and sends an alert.",
+      "Configure the Model Registry's `min_auc` threshold in the Databricks workspace settings YAML.",
+      "Use a Model Registry webhook that triggers an HTTP callback; handle the promotion logic in the external system."
+    ],
+    "answer": 1,
+    "explanation": "Automated validation gates are implemented as Databricks Jobs (or CI steps): load the Staging model, evaluate on a fixed validation set, and programmatically promote/reject via the MLflow client API. Webhooks (option D) can trigger the validation job on registry events, but the validation and promotion logic still runs in the Databricks Job — both approaches can be combined."
+  },
+  {
+    "id": 112,
+    "cert": "professional",
+    "domain": "Section 2: Model Lifecycle Management",
+    "question": "A team wants to receive a Slack notification whenever a model version is promoted to Production in the MLflow Model Registry. What Databricks mechanism supports this?",
+    "options": [
+      "Configure an email alert in the Databricks workspace admin settings to notify on Model Registry stage changes.",
+      "Create a Model Registry webhook that triggers on the `TRANSITION_REQUEST_CREATED` or `MODEL_VERSION_TRANSITIONED_STAGE` event and calls a Slack webhook URL or a Databricks Job that sends the Slack message.",
+      "Use a Delta Live Tables pipeline that monitors the model registry audit log table and triggers a notification pipeline.",
+      "Add a `mlflow.set_tag('notify_slack', 'true')` call after each transition — the registry automatically reads this tag."
+    ],
+    "answer": 1,
+    "explanation": "MLflow Model Registry webhooks (HTTP webhooks) fire on registry events: MODEL_VERSION_CREATED, MODEL_VERSION_TRANSITIONED_STAGE, TRANSITION_REQUEST_CREATED, etc. You configure a webhook with the event type and a target URL (Slack incoming webhook, or a Databricks job trigger URL). This is the native mechanism for event-driven notifications and automation."
+  },
+  {
+    "id": 113,
+    "cert": "professional",
+    "domain": "Section 2: Model Lifecycle Management",
+    "question": "What is the difference between MLflow Model Registry 'aliases' and 'stages' (Staging/Production/Archived), and when should you use each?",
+    "options": [
+      "Aliases and stages are identical; 'aliases' is the newer name for 'stages' introduced in MLflow 2.0.",
+      "Stages (Staging/Production/Archived) are a fixed set of three lifecycle labels that can only be assigned to one version per stage at a time. Aliases are user-defined named pointers (e.g., 'champion', 'challenger', 'shadow') that can coexist and map to any version. Aliases are more flexible and are the preferred approach in Unity Catalog.",
+      "Stages require approval workflows; aliases are assigned immediately without any review process.",
+      "Aliases can only be created by workspace admins; stages can be set by any user with Can Manage permissions."
+    ],
+    "answer": 1,
+    "explanation": "Stages (Staging/Production/Archived) are a fixed enum with one version per stage — promoting v3 to Production automatically demotes v2. Aliases are user-defined: you can have 'champion', 'challenger', and 'shadow' pointing to different versions simultaneously. Unity Catalog model registry uses aliases as the primary mechanism (stages are deprecated in UC). Aliases provide more flexibility for champion/challenger and A/B testing workflows."
+  },
+  {
+    "id": 114,
+    "cert": "professional",
+    "domain": "Section 2: Model Lifecycle Management",
+    "question": "Describe the CI/CD pipeline for an ML model from code commit to production deployment on Databricks.",
+    "options": [
+      "Git push → manually run the training notebook → manually test in Databricks notebook → manually promote in Model Registry UI.",
+      "Git push → CI triggers Databricks job (training + evaluation) → if evaluation passes, model registers in Model Registry with Staging alias → CD stage runs validation job → if validation passes, alias updated to Production → downstream serving picks up the new Production alias.",
+      "Git push → Docker build → push image to ECR → redeploy Kubernetes serving pods.",
+      "Git push → MLflow autolog captures the change → model is automatically promoted to Production if no errors occur during the notebook run."
+    ],
+    "answer": 1,
+    "explanation": "A proper MLOps CI/CD pipeline: (1) Code push triggers CI (GitHub Actions, Azure DevOps, etc.); (2) CI runs the training Databricks job, logs to MLflow; (3) CI runs an evaluation job — if metrics pass, registers/promotes model to Staging; (4) CD runs a validation job against a held-out test set; (5) If validation passes, updates alias to Production; (6) Downstream serving reloads the Production alias. This enables automated, auditable model deployment."
+  },
+  {
+    "id": 115,
+    "cert": "professional",
+    "domain": "Section 2: Model Lifecycle Management",
+    "question": "How does MLflow track model lineage — specifically, which training run produced a registered model version?",
+    "options": [
+      "MLflow does not track lineage; you must manually maintain a spreadsheet mapping run IDs to model versions.",
+      "When registering a model with `mlflow.register_model(model_uri, name)` or `mlflow.log_model(..., registered_model_name=name)`, MLflow automatically stores the source run ID in the model version metadata. In the UI you can click a model version and see the originating run, including all its logged parameters, metrics, and code version.",
+      "MLflow stores lineage in a separate audit database that must be configured by the workspace admin.",
+      "Model lineage is tracked via Delta Lake transaction log — every model write creates a Delta commit entry."
+    ],
+    "answer": 1,
+    "explanation": "MLflow Model Registry automatically links each model version to its source MLflow run. The model version metadata stores the source_run_id, run_link, and source artifact URI. In the registry UI, clicking a version shows the originating run with all its parameters, metrics, and artifact. This provides end-to-end lineage: data → run → model version → deployment."
+  },
+  {
+    "id": 116,
+    "cert": "professional",
+    "domain": "Section 2: Model Lifecycle Management",
+    "question": "A model version in Production is found to have a critical bug. What is the fastest safe rollback strategy in the MLflow Model Registry?",
+    "options": [
+      "Delete the Production model version, retrain from scratch, and register the new version.",
+      "Update the 'champion' alias (or Production stage) to point to the previous known-good model version — this is an instantaneous metadata update. Downstream services loading models by alias/stage immediately serve the previous version without any redeployment.",
+      "Deploy a hotfix by modifying the model artifact directly in the artifact store.",
+      "Create a new experiment, retrain with the previous code commit, and register as a new version."
+    ],
+    "answer": 1,
+    "explanation": "Rolling back by updating the alias/stage pointer is the fastest safe operation — it's a metadata update (sub-second) with no artifact movement. Downstream services that load models dynamically via `models:/MyModel/Production` immediately serve the previous version on next load. This is why alias-based routing is preferred over hardcoded model version IDs in serving code."
+  },
+  {
+    "id": 117,
+    "cert": "professional",
+    "domain": "Section 2: Model Lifecycle Management",
+    "question": "You are implementing a champion/challenger framework. The champion model serves 90% of production traffic and the challenger model serves 10%. After 2 weeks, the challenger shows +3% AUC improvement. What is the recommended promotion workflow?",
+    "options": [
+      "Immediately delete the champion model and replace it with the challenger at 100% traffic.",
+      "Gradually increase challenger traffic (e.g., 10% → 25% → 50% → 100%) while monitoring latency, error rate, and business KPIs at each step. When confident, update the Production alias to the challenger version and archive the champion. Rollback is available at any step by reverting the alias.",
+      "The challenger needs to run for at least 6 months before any traffic increase is considered safe.",
+      "Create a new ensemble model combining champion and challenger predictions at a 50/50 ratio and register it as the new champion."
+    ],
+    "answer": 1,
+    "explanation": "Safe promotion uses gradual traffic shifting (canary/progressive rollout): increase challenger traffic in stages while monitoring production metrics. This detects issues (latency spikes, unexpected prediction patterns, business metric drops) before 100% exposure. The alias swap is the final step — atomic, instant, and easily reversible. Monitoring at each stage is critical."
+  },
+  {
+    "id": 118,
+    "cert": "professional",
+    "domain": "Section 2: Model Lifecycle Management",
+    "question": "A model needs to be governed with approval-required stage transitions: a senior data scientist must approve before a model moves from Staging to Production. Which MLflow Model Registry feature supports this workflow?",
+    "options": [
+      "Set the `require_approval=True` flag in the workspace MLflow configuration YAML.",
+      "Use the 'Request Transition' workflow in the MLflow Model Registry: any user with Can Manage permissions can request a stage transition, while only users with approval authority (Can Manage Staging/Production permissions) can approve/reject. Combine with a webhook to notify approvers.",
+      "Use Databricks workspace permissions to restrict the MLflow registry to read-only for non-admin users.",
+      "Implement approval by adding a mandatory code review step in the Git PR process before the training job runs."
+    ],
+    "answer": 1,
+    "explanation": "MLflow Model Registry has a built-in approval workflow: users 'request' a stage transition (writes a pending transition request), and designated approvers 'approve' or 'reject' it. The TRANSITION_REQUEST_CREATED webhook event can notify approvers via Slack/email. Access control is managed via Databricks permissions on the registered model (CAN_MANAGE_STAGING_VERSIONS, CAN_MANAGE_PRODUCTION_VERSIONS)."
+  }
+]

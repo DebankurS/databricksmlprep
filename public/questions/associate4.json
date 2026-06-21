@@ -1,0 +1,100 @@
+[
+  {
+    "id": 23,
+    "cert": "associate",
+    "domain": "Section 4: Scaling ML Models",
+    "question": "You need to train a deep neural network on a large dataset distributed across multiple Spark workers on a Databricks cluster. Which framework integrates natively with Spark for distributed deep learning training?",
+    "options": [
+      "Scikit-learn's GridSearchCV with n_jobs=-1, which automatically uses all available CPU cores.",
+      "Horovod, an open-source distributed deep learning framework that uses Spark workers as training processes and supports TensorFlow and PyTorch through HorovodRunner on Databricks.",
+      "Hyperopt with Trials (not SparkTrials), which runs each trial on a separate Spark worker.",
+      "Spark ML's MultilayerPerceptronClassifier, which natively distributes gradient computation across all workers."
+    ],
+    "answer": 1,
+    "explanation": "Horovod is the framework for distributed deep learning on Spark. Databricks provides HorovodRunner which uses Spark to launch Horovod training processes on worker nodes. It supports TensorFlow and PyTorch. HorovodRunner(np=N) launches N parallel training processes — typically one per GPU or worker."
+  },
+  {
+    "id": 24,
+    "cert": "associate",
+    "domain": "Section 4: Scaling ML Models",
+    "question": "You are using Hyperopt with `SparkTrials` to tune hyperparameters for a scikit-learn model on Databricks. What is the key advantage of `SparkTrials` over the default `Trials` object?",
+    "options": [
+      "SparkTrials uses Bayesian optimization instead of random search, improving sample efficiency.",
+      "SparkTrials parallelizes hyperparameter trials across Spark workers, running multiple trials simultaneously. Trials runs trials sequentially on the driver node only.",
+      "SparkTrials automatically logs results to the MLflow tracking server; Trials requires manual mlflow.log_metric() calls.",
+      "SparkTrials supports gradient-based optimization; Trials only supports random search."
+    ],
+    "answer": 1,
+    "explanation": "The key difference is parallelism. Trials runs each trial serially on the driver. SparkTrials distributes trials across the Spark cluster — each worker receives a trial to evaluate in parallel. Both use the same TPE algorithm for Bayesian optimization. SparkTrials also integrates with MLflow automatically when used on Databricks."
+  },
+  {
+    "id": 25,
+    "cert": "associate",
+    "domain": "Section 4: Scaling ML Models",
+    "question": "You need to run batch inference on 50 million rows using a trained scikit-learn model. The data is in a Spark DataFrame. What is the recommended approach to maximize throughput?",
+    "options": [
+      "Convert the full Spark DataFrame to a Pandas DataFrame using .toPandas(), then call model.predict() on the Pandas DataFrame.",
+      "Register the model with mlflow.sklearn and call mlflow.pyfunc.load_model() on each row using a Python UDF.",
+      "Use a Pandas UDF (vectorized UDF) that applies the model's predict function to batches of rows as Pandas Series or DataFrames, distributing inference across all Spark workers.",
+      "Export the Spark DataFrame to a CSV file, then load it into a single-node machine for inference."
+    ],
+    "answer": 2,
+    "explanation": "Pandas UDFs (also called vectorized UDFs) are the standard pattern for scalable batch inference. They operate on Pandas Series/DataFrames in batches (not row by row), which is far more efficient than regular Python UDFs. The Spark executor serializes batches and distributes them to workers, enabling full cluster parallelism. toPandas() moves all data to the driver — not scalable for 50M rows."
+  },
+  {
+    "id": 26,
+    "cert": "associate",
+    "domain": "Section 4: Scaling ML Models",
+    "question": "When using `HorovodRunner(np=4)` on a Databricks cluster, what does the `np=4` parameter specify?",
+    "options": [
+      "The number of hyperparameter tuning trials to run in parallel.",
+      "The number of parallel Horovod processes (typically one per GPU or worker node) that will collectively train the model using all-reduce gradient synchronization.",
+      "The number of epochs to train for on each worker before synchronizing gradients.",
+      "The number of data partitions to split the training dataset into for each worker."
+    ],
+    "answer": 1,
+    "explanation": "np=4 in HorovodRunner specifies the number of parallel Horovod training processes. Each process runs on a separate worker (or GPU). All processes train simultaneously and synchronize gradients using Horovod's ring-allreduce algorithm after each batch, effectively training on all data in parallel."
+  },
+  {
+    "id": 27,
+    "cert": "associate",
+    "domain": "Section 4: Scaling ML Models",
+    "question": "You are training a PyTorch model with Horovod on Databricks. What modification is required to the optimizer to enable distributed gradient averaging?",
+    "options": [
+      "Replace `torch.optim.Adam` with `horovod.torch.optimizers.Adam`, a Horovod-specific optimizer class.",
+      "Wrap the standard PyTorch optimizer with `hvd.DistributedOptimizer(optimizer, named_parameters=model.named_parameters())`, which intercepts gradient updates and averages them across all workers using allreduce.",
+      "Set `torch.distributed.init_process_group(backend='horovod')` before initializing the optimizer.",
+      "No modification is needed — Horovod hooks into PyTorch's autograd automatically when hvd.init() is called."
+    ],
+    "answer": 1,
+    "explanation": "The required change is wrapping the optimizer with `hvd.DistributedOptimizer`. This is the hook Horovod uses to intercept gradients after the backward pass and average them across all workers via allreduce before the parameter update step. Without this wrapping, each worker trains independently with no gradient synchronization."
+  },
+  {
+    "id": 28,
+    "cert": "associate",
+    "domain": "Section 4: Scaling ML Models",
+    "question": "Which of the following best describes the purpose of `hyperopt.fmin()` in a Databricks HPO workflow?",
+    "options": [
+      "fmin() runs gradient descent to minimize the model's training loss by iteratively updating hyperparameters.",
+      "fmin() searches the hyperparameter space defined by the `space` argument using the TPE algorithm (or other) to minimize the objective function, distributing trials via the provided `trials` object (Trials or SparkTrials).",
+      "fmin() is a Spark transformation that applies a UDF to each row to compute per-sample losses.",
+      "fmin() performs feature selection by minimizing the feature importance entropy of the trained model."
+    ],
+    "answer": 1,
+    "explanation": "hyperopt.fmin() is the core optimization driver. It takes an objective function (which trains a model and returns a loss), a hyperparameter space (e.g., defined with hp.choice, hp.uniform), a search algorithm (typically tpe.suggest for Bayesian TPE), a trials object (Trials or SparkTrials), and max_evals. It finds the hyperparameter configuration that minimizes the objective."
+  },
+  {
+    "id": 29,
+    "cert": "associate",
+    "domain": "Section 4: Scaling ML Models",
+    "question": "A data scientist sets `parallelism=8` in `SparkTrials`. What does this control, and what determines the effective upper bound?",
+    "options": [
+      "It sets the number of Hyperopt optimization iterations; the algorithm runs 8 sequential rounds of Bayesian improvement.",
+      "It specifies the maximum number of HPO trials to run concurrently across Spark workers. The effective upper bound is limited by the number of available Spark worker cores or executors.",
+      "It configures the number of cross-validation folds for each trial's model evaluation.",
+      "It sets the random seed for reproducible trial sampling across 8 parallel streams."
+    ],
+    "answer": 1,
+    "explanation": "parallelism in SparkTrials controls how many Hyperopt trials run simultaneously on the Spark cluster. The practical upper bound is the number of available Spark workers/executors, since each concurrent trial requires one Spark task. Setting parallelism higher than available workers wastes resources — excess trials will queue and wait."
+  }
+]

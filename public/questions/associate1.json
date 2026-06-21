@@ -1,0 +1,100 @@
+[
+  {
+    "id": 1,
+    "cert": "associate",
+    "domain": "Section 1: Databricks ML Platform",
+    "question": "A data scientist needs to train a binary classification model on a tabular dataset stored in a Delta table. She has no experience writing model training code and needs the best model as fast as possible. Which Databricks feature should she use?",
+    "options": [
+      "Write a custom Scikit-learn training script and log results with mlflow.log_metric().",
+      "Use Databricks AutoML to automatically run feature engineering, model training, and hyperparameter tuning, then inspect the generated notebooks.",
+      "Use the Databricks Feature Store to register all columns as features, then manually call SparkML GBTClassifier.",
+      "Use Databricks Repos to clone an open-source AutoML library from GitHub."
+    ],
+    "answer": 1,
+    "explanation": "Databricks AutoML is the correct tool. It automatically handles feature engineering, trains multiple model types with hyperparameter tuning, logs all runs to MLflow, and generates editable Python notebooks showing exactly what was done — requiring zero hand-written training code."
+  },
+  {
+    "id": 2,
+    "cert": "associate",
+    "domain": "Section 1: Databricks ML Platform",
+    "question": "After running a Databricks AutoML experiment, a data scientist wants to access the winning model for further customization. Where should he look?",
+    "options": [
+      "The AutoML API response object, which returns a fitted scikit-learn Pipeline object directly.",
+      "The MLflow experiment linked to the AutoML run — the best trial's run contains the logged model artifact and a generated source notebook.",
+      "The Databricks Model Registry, where AutoML automatically promotes the best model to the Production stage.",
+      "The cluster driver logs, which print the final model parameters after training."
+    ],
+    "answer": 1,
+    "explanation": "Databricks AutoML logs every trial to an MLflow experiment. The best trial's run contains the model artifact and a generated notebook with the training code. AutoML does NOT automatically register or promote to Production — that requires a manual action."
+  },
+  {
+    "id": 3,
+    "cert": "associate",
+    "domain": "Section 1: Databricks ML Platform",
+    "question": "A team wants to share a set of pre-computed user features across three separate ML models — a churn model, a recommendation model, and a fraud model — to avoid redundant computation and prevent training-serving skew. Which Databricks component is specifically designed for this use case?",
+    "options": [
+      "Delta Lake with time travel, enabling point-in-time snapshots for any historical feature values.",
+      "Databricks Feature Store, which provides a centralized registry where features are defined once and reused by multiple models during training and inference.",
+      "MLflow Model Registry, which stores model artifacts alongside their training datasets.",
+      "Databricks SQL, which allows sharing feature computation logic via Views accessible by all teams."
+    ],
+    "answer": 1,
+    "explanation": "The Databricks Feature Store is the correct answer. It provides a centralized catalog where features are defined once using feature tables, reused by multiple models at training time, and the same feature pipeline is automatically applied at inference time — preventing training-serving skew."
+  },
+  {
+    "id": 4,
+    "cert": "associate",
+    "domain": "Section 1: Databricks ML Platform",
+    "question": "A machine learning engineer is registering a feature table in the Databricks Feature Store. The feature table must support point-in-time lookups to prevent data leakage when creating training datasets. What is the required column for enabling this capability?",
+    "options": [
+      "A unique primary key column that identifies each entity (e.g., customer_id).",
+      "A timestamp column that records when each feature value was valid, combined with a primary key.",
+      "A partition column based on date that allows Delta time travel queries.",
+      "An integer index column that maps to the event sequence for each entity."
+    ],
+    "answer": 1,
+    "explanation": "Point-in-time lookups in the Databricks Feature Store require BOTH a primary key (entity identifier) and a timestamp column. During training dataset creation, the timestamp is used to look up only feature values that were available at or before the label event timestamp, preventing data leakage."
+  },
+  {
+    "id": 5,
+    "cert": "associate",
+    "domain": "Section 1: Databricks ML Platform",
+    "question": "Which of the following statements about Databricks Runtime for Machine Learning (ML Runtime) is correct?",
+    "options": [
+      "ML Runtime is a GPU-only runtime and cannot be used on CPU-only clusters.",
+      "ML Runtime includes pre-installed ML libraries such as TensorFlow, PyTorch, Scikit-learn, XGBoost, and MLflow, and configures Spark for distributed ML workloads.",
+      "ML Runtime replaces the cluster driver with a specialized ML orchestration service.",
+      "ML Runtime is only available on Single Node clusters and does not support multi-worker setups."
+    ],
+    "answer": 1,
+    "explanation": "Databricks ML Runtime comes pre-installed with popular ML libraries (TensorFlow, PyTorch, Scikit-learn, XGBoost, LightGBM, Hyperopt, MLflow) and optimizes cluster settings for distributed ML. It works on both CPU and GPU clusters and supports multi-worker setups for distributed training."
+  },
+  {
+    "id": 6,
+    "cert": "associate",
+    "domain": "Section 1: Databricks ML Platform",
+    "question": "A data scientist used Databricks AutoML and found the best trial in the MLflow experiment. She now wants to reproduce and improve the model. What is the recommended approach?",
+    "options": [
+      "Re-run the same AutoML experiment with a longer timeout to generate more trials.",
+      "Open the source notebook that AutoML generated for the best trial, clone it to Databricks Repos, and customize the training code directly.",
+      "Use mlflow.load_model() on the best run's model artifact and call model.fit() again with new parameters.",
+      "Modify the AutoML configuration YAML and push it to the cluster's init script."
+    ],
+    "answer": 1,
+    "explanation": "AutoML generates fully editable Python notebooks (one per trial). The recommended workflow is to open and clone the best trial's notebook, then customize hyperparameters, preprocessing steps, or add new feature engineering directly in the notebook."
+  },
+  {
+    "id": 7,
+    "cert": "associate",
+    "domain": "Section 1: Databricks ML Platform",
+    "question": "A Feature Store table has a primary key of `customer_id` and a timestamp column `feature_ts`. A label table has `customer_id` and `event_ts` for each training event. When calling `FeatureStoreClient.create_training_set()`, what does the `timestamp_lookup_key` parameter control?",
+    "options": [
+      "It controls the partition column used to speed up the lookup query.",
+      "It specifies the label table column to use as the cutoff when looking up feature values, ensuring only features available before that event timestamp are included.",
+      "It sets the maximum age of feature data that is considered valid for training.",
+      "It defines the join key between the feature table and the label table."
+    ],
+    "answer": 1,
+    "explanation": "The `timestamp_lookup_key` specifies the column in the observation table (label table) that serves as the time cutoff for point-in-time feature lookup. Only feature values with `feature_ts <= event_ts` are included, preventing data leakage from future feature values."
+  }
+]

@@ -1,0 +1,86 @@
+[
+  {
+    "id": 30,
+    "cert": "associate",
+    "domain": "Section 5: MLflow Model Lifecycle",
+    "question": "In MLflow, what is the difference between `mlflow.log_param()`, `mlflow.log_metric()`, and `mlflow.log_artifact()`?",
+    "options": [
+      "They are identical — all three log key-value pairs to the MLflow run; the naming is for developer readability only.",
+      "`log_param()` records a single key-value configuration (e.g., learning_rate=0.01) that does not change during training. `log_metric()` records a numeric value that can change over training steps (e.g., accuracy per epoch). `log_artifact()` uploads a file or directory (e.g., a plot, CSV, or model file) to the run's artifact store.",
+      "`log_param()` is for input features; `log_metric()` is for output labels; `log_artifact()` is for model weights.",
+      "`log_metric()` is batch-only; `log_param()` supports streaming; `log_artifact()` is for binary blobs only."
+    ],
+    "answer": 1,
+    "explanation": "log_param: records input hyperparameters (strings or numbers that are set before training). log_metric: records numeric metrics that may be logged multiple times with a step (e.g., loss at each epoch). log_artifact: uploads files/directories to the run's artifact storage (e.g., plots, confusion matrices, feature importance CSVs)."
+  },
+  {
+    "id": 31,
+    "cert": "associate",
+    "domain": "Section 5: MLflow Model Lifecycle",
+    "question": "What does `mlflow.autolog()` do when called before training a scikit-learn model?",
+    "options": [
+      "It starts a new MLflow experiment and automatically assigns a unique experiment name based on the cluster ID.",
+      "It automatically logs hyperparameters, metrics, and the fitted model artifact to the current MLflow run without requiring explicit mlflow.log_param() or mlflow.log_metric() calls. It hooks into the training framework's fit() call.",
+      "It enables real-time streaming of training metrics to a Grafana dashboard.",
+      "It converts the scikit-learn model into an MLflow-native format that is incompatible with standard sklearn predict()."
+    ],
+    "answer": 1,
+    "explanation": "mlflow.autolog() (or framework-specific mlflow.sklearn.autolog()) automatically captures hyperparameters passed to fit(), training/validation metrics, and logs the fitted model artifact. It hooks into the framework's API without requiring any manual mlflow.log_* calls. It must be called before the .fit() call."
+  },
+  {
+    "id": 32,
+    "cert": "associate",
+    "domain": "Section 5: MLflow Model Lifecycle",
+    "question": "A team has trained 3 candidate models logged to the same MLflow experiment. How do they programmatically find the best model run by validation F1-score using the MLflow Python client?",
+    "options": [
+      "Call `mlflow.get_best_run(experiment_name, metric='val_f1', order='max')` — this is a native MLflow function.",
+      "Use `mlflow.search_runs(experiment_ids=[exp_id], order_by=['metrics.val_f1 DESC'])` to retrieve a DataFrame of runs sorted by the metric, then select the first row's run_id.",
+      "Navigate to the MLflow UI, sort runs by val_f1 manually, and copy the run_id.",
+      "Call `mlflow.list_run_infos()` and iterate through each run to compare val_f1 values."
+    ],
+    "answer": 1,
+    "explanation": "mlflow.search_runs() is the programmatic API for querying runs. Passing order_by=['metrics.val_f1 DESC'] returns a Pandas DataFrame with runs sorted by that metric descending. The first row (index 0) contains the best run. This enables automated selection in CI/CD pipelines without manual UI interaction."
+  },
+  {
+    "id": 33,
+    "cert": "associate",
+    "domain": "Section 5: MLflow Model Lifecycle",
+    "question": "A model is registered in the MLflow Model Registry. What does transitioning a model version to the 'Production' stage mean, and how is it done?",
+    "options": [
+      "The model is automatically deployed to a REST endpoint. Transitioning to Production starts the serving container.",
+      "It is a metadata label that designates that version as the canonical production model. Other systems can query the registry to load the version with stage='Production'. Transition via the UI or `client.transition_model_version_stage(name, version, stage='Production')`.",
+      "Production stage locks the model from further changes; you must archive it first before making any updates.",
+      "Transitioning to Production copies the model artifact to a separate, air-gapped production storage bucket."
+    ],
+    "answer": 1,
+    "explanation": "Stage transitions in MLflow Model Registry are metadata changes — they label a version (None → Staging → Production → Archived) for discoverability. They do NOT trigger deployment automatically. Production stage signals 'this is the canonical version to serve.' Applications load the Production version via mlflow.pyfunc.load_model('models:/MyModel/Production')."
+  },
+  {
+    "id": 34,
+    "cert": "associate",
+    "domain": "Section 5: MLflow Model Lifecycle",
+    "question": "What is an MLflow model signature, and why is it important?",
+    "options": [
+      "A model signature is the digital signature of the model artifact for security verification when loading from the registry.",
+      "A model signature defines the expected input schema (column names and types) and output schema for a logged model. It enables input validation at serving time and documents the contract between the model and its consumers.",
+      "A model signature is a version string appended to the model name in the registry for unique identification.",
+      "A model signature contains the list of hyperparameters used during training for reproducibility."
+    ],
+    "answer": 1,
+    "explanation": "MLflow model signatures define the input/output data schema (column names, data types, tensor shapes). They are logged with mlflow.log_model(..., signature=signature) using mlflow.models.infer_signature(). At serving time, the signature is used to validate that incoming requests match the expected schema, preventing silent type errors."
+  },
+  {
+    "id": 35,
+    "cert": "associate",
+    "domain": "Section 5: MLflow Model Lifecycle",
+    "question": "Which MLflow function loads a model from the registry as a generic Python function that can be called with a Pandas DataFrame, regardless of the original training framework (sklearn, XGBoost, PyTorch, etc.)?",
+    "options": [
+      "`mlflow.sklearn.load_model('models:/MyModel/Production')` — the sklearn flavor is the universal loader.",
+      "`mlflow.pyfunc.load_model('models:/MyModel/Production')` — the pyfunc flavor wraps any model as a Python callable with a standard `predict(data: DataFrame) -> DataFrame` interface.",
+      "`mlflow.spark.load_model('models:/MyModel/Production')` — Spark models serve as the universal abstraction.",
+      "`mlflow.load_artifact('models:/MyModel/Production')` — artifacts are the generic model storage format."
+    ],
+    "answer": 1,
+    "explanation": "mlflow.pyfunc.load_model() is the framework-agnostic model loader. It loads any logged model (sklearn, XGBoost, TensorFlow, PyTorch, custom pyfunc) and returns a PythonModel object with a .predict(data) method that accepts Pandas DataFrames or numpy arrays. This is the standard pattern for model serving and batch inference pipelines."
+  }
+]

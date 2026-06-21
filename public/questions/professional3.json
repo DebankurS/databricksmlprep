@@ -1,0 +1,128 @@
+[
+  {
+    "id": 119,
+    "cert": "professional",
+    "domain": "Section 3: Model Deployment",
+    "question": "You need to score 500 million customer records daily. Predictions must be available by 6 AM for the marketing team. Which deployment pattern is most appropriate?",
+    "options": [
+      "Real-time Model Serving with a REST endpoint — the marketing team queries the endpoint for each customer record at 6 AM.",
+      "Batch inference using a Databricks Job scheduled to run overnight: load the model via mlflow.pyfunc, apply it to the customer DataFrame using a Pandas UDF, and write predictions to a Delta table that the marketing team reads at 6 AM.",
+      "Spark Structured Streaming reading from a Kafka topic and writing predictions to a Delta table continuously.",
+      "Deploy the model as a Databricks SQL UDF that the marketing team calls in a SELECT statement each morning."
+    ],
+    "answer": 1,
+    "explanation": "Batch inference overnight is correct for this use case: 500M records, daily cadence, 6 AM SLA. Run a scheduled Databricks Job that reads all customer records from Delta Lake, applies the model with a Pandas UDF (vectorized, parallelized across all workers), and writes predictions to a Delta table. Real-time serving would be over-engineered for a daily batch need and costly at this scale."
+  },
+  {
+    "id": 120,
+    "cert": "professional",
+    "domain": "Section 3: Model Deployment",
+    "question": "A fraud detection system must score transactions within 50ms of occurrence, 24/7. Which deployment pattern is required?",
+    "options": [
+      "Batch inference job running every 5 minutes — 5-minute latency is acceptable for fraud detection.",
+      "Databricks Model Serving (real-time REST endpoint) with auto-scaling. The transaction system calls the endpoint synchronously for each transaction. Target <50ms p99 latency requires selecting an appropriate instance type and pre-warming the endpoint.",
+      "Spark Structured Streaming job reading transactions from a Kafka topic and writing fraud scores to Delta Lake.",
+      "A Python Flask app hosted on the Databricks driver node serving predictions over HTTP."
+    ],
+    "answer": 1,
+    "explanation": "50ms latency with 24/7 availability requires real-time serving. Databricks Model Serving provides a managed REST endpoint with auto-scaling, serving the model as a REST API. The application calls the endpoint per-transaction synchronously. Streaming (option C) has higher latency (seconds to minutes). Batch scoring (option A) has minutes of latency. The driver-node Flask app (option D) is not production-grade."
+  },
+  {
+    "id": 121,
+    "cert": "professional",
+    "domain": "Section 3: Model Deployment",
+    "question": "You want to use Databricks Feature Store at inference time with a real-time Model Serving endpoint. The serving endpoint should look up the latest feature values for an incoming entity ID. How is this configured?",
+    "options": [
+      "The model must be logged with `mlflow.sklearn.log_model()` — only sklearn models support Feature Store integration at serving time.",
+      "Log the model with `FeatureStoreClient.log_model()` (or with Feature Store metadata attached). The serving endpoint is configured with the feature retrieval spec, so at request time it automatically looks up the latest feature values from the online feature store (e.g., DynamoDB, Cosmos DB) using the entity ID in the request.",
+      "Pass all feature values in the REST request body — Feature Store lookups at serving time require sending all feature values explicitly.",
+      "Use a pre-compute job that runs every minute and writes feature values to a Redis cache; the model code reads from Redis directly."
+    ],
+    "answer": 1,
+    "explanation": "Databricks Feature Store supports online inference by logging models with feature lookup metadata via FeatureStoreClient.log_model(). When deployed to Model Serving, the endpoint receives only the entity primary key in the request; it automatically looks up feature values from the configured online store (e.g., DynamoDB, Cosmos DB, or Databricks-managed online tables) and passes them to the model for prediction."
+  },
+  {
+    "id": 122,
+    "cert": "professional",
+    "domain": "Section 3: Model Deployment",
+    "question": "You need to run near-real-time inference on a stream of IoT sensor events arriving via Kafka. Predictions must be written to Delta Lake within 30 seconds of event arrival. Which approach is correct?",
+    "options": [
+      "Deploy a Databricks Model Serving endpoint and have the Kafka consumer application call the endpoint per event.",
+      "Use Spark Structured Streaming to read from the Kafka source, apply the model using `mlflow.pyfunc.spark_udf()` (registers the model as a Spark UDF for native Structured Streaming integration), and write predictions to Delta Lake with a foreachBatch or append-mode sink.",
+      "Use an Apache Flink job on a separate cluster for all streaming ML inference — Spark Structured Streaming cannot call MLflow models.",
+      "Write a Databricks Job that polls the Kafka topic every 30 seconds, processes a batch, and writes to Delta."
+    ],
+    "answer": 1,
+    "explanation": "mlflow.pyfunc.spark_udf() creates a Spark UDF from an MLflow model that can be called directly in Structured Streaming. The pattern: read from Kafka source → apply spark_udf to the feature columns → write predictions to Delta with foreachBatch or streaming append. This achieves seconds-latency with full Spark cluster parallelism and native Delta Lake integration."
+  },
+  {
+    "id": 123,
+    "cert": "professional",
+    "domain": "Section 3: Model Deployment",
+    "question": "A Databricks Model Serving endpoint shows high p99 latency during traffic spikes. What are the two primary levers to address this, and what are their trade-offs?",
+    "options": [
+      "Decrease the model complexity (fewer parameters) and reduce the feature count — simpler models always have lower latency.",
+      "Horizontal scaling (increase `scale_to_zero_enabled=False` and set higher `max_provisioned_throughput`) to add more serving replicas, reducing queuing. Or vertical scaling (select a larger instance type with more CPU/GPU/RAM) to reduce per-request processing time. Trade-off: horizontal scaling adds replicas (linear cost increase); vertical scaling increases per-replica cost but helps latency-bound bottlenecks.",
+      "Enable model quantization (FP16 instead of FP32) — Databricks automatically does this when latency spikes are detected.",
+      "Reduce the Kafka consumer lag by increasing the number of Kafka partitions to reduce the load on the endpoint."
+    ],
+    "answer": 1,
+    "explanation": "High p99 latency under spikes has two causes: queuing (too few replicas for concurrent requests) and per-request compute time. Horizontal scaling (more replicas) reduces queuing. Vertical scaling (larger instances, GPU) reduces per-request time. For latency-sensitive endpoints, also consider: model optimization (ONNX, TensorRT), input batching configuration, and removing scale-to-zero to eliminate cold-start latency."
+  },
+  {
+    "id": 124,
+    "cert": "professional",
+    "domain": "Section 3: Model Deployment",
+    "question": "You are running an A/B test between model v1 (champion) and model v2 (challenger) using Databricks Model Serving. What is the recommended architecture?",
+    "options": [
+      "Deploy v1 and v2 on separate endpoints with different URLs; split traffic in the application code using a random coin flip.",
+      "Deploy both models on the same Databricks Model Serving endpoint using traffic split configuration: set v1 to 90% traffic and v2 to 10%. The endpoint routes requests automatically. Log a model version tag in the response payload to attribute outcomes to each version.",
+      "Train an ensemble model combining v1 and v2 predictions at deployment time; the ensemble IS the A/B test.",
+      "Use Databricks Experiments to create an A/B test run — Experiments natively route production traffic between models."
+    ],
+    "answer": 1,
+    "explanation": "Databricks Model Serving supports multi-model traffic splitting on a single endpoint: configure version weights (e.g., 90/10). The endpoint routes requests randomly according to weights, returning predictions from the selected model. This is simpler than separate endpoints and avoids client-side routing complexity. Include model version in response metadata to enable outcome attribution in downstream analysis."
+  },
+  {
+    "id": 125,
+    "cert": "professional",
+    "domain": "Section 3: Model Deployment",
+    "question": "How should you structure batch inference code to maximize throughput when scoring 1 billion records with a scikit-learn model?",
+    "options": [
+      "Use a single-node cluster (driver only) with 64 cores — Spark overhead reduces throughput for sklearn models.",
+      "Use `mlflow.pyfunc.spark_udf(spark, model_uri, result_type=...)` to register the model as a vectorized Pandas UDF, broadcast the loaded model to all workers (or let spark_udf handle loading), then apply the UDF in a `df.withColumn('prediction', model_udf(*feature_cols))` call on the full Spark DataFrame. Use appropriate partition count (cluster_cores * 2-4).",
+      "Convert the DataFrame to Parquet, distribute files to workers manually using Databricks dbutils.fs, and run sklearn in subprocess on each file.",
+      "Use PySpark's `rdd.map()` with a Python lambda calling model.predict() for row-by-row inference."
+    ],
+    "answer": 1,
+    "explanation": "mlflow.pyfunc.spark_udf() is the standard pattern. It loads the model on each worker (lazy loading with broadcast), applies it in vectorized batches (Pandas Series), and integrates natively with Spark's execution engine. The key optimizations: use spark_udf (vectorized, not row-by-row), repartition to match available cores (2-4x cores), and ensure the model is small enough to broadcast. rdd.map() (option D) is row-by-row Python UDF — 10-100x slower."
+  },
+  {
+    "id": 126,
+    "cert": "professional",
+    "domain": "Section 3: Model Deployment",
+    "question": "What is the purpose of `mlflow.models.predict()` and how does it differ from loading a model and calling `.predict()` directly?",
+    "options": [
+      "They are identical — mlflow.models.predict() is just a convenience wrapper.",
+      "mlflow.models.predict() is a CLI/Python utility for testing model predictions outside a serving context, applying the full MLflow model (including any pre/post-processing defined in the pyfunc wrapper) to input data. It is useful for local testing and validation before deploying. Loading and calling .predict() directly bypasses the pyfunc wrapper if the model was logged with custom pre/post-processing logic.",
+      "mlflow.models.predict() only works with models registered in the Model Registry; loaded models use .predict() directly.",
+      "mlflow.models.predict() runs inference in a separate container matching the model's conda environment, ensuring environment parity."
+    ],
+    "answer": 1,
+    "explanation": "mlflow.models.predict() runs predictions through the full MLflow pyfunc interface (including any pre/post-processing defined in the PythonModel.predict() method or conda env). It's primarily used for local validation before serving deployment. When you load a model and call .predict() on the raw model object (e.g., a sklearn model), you skip the pyfunc wrapper and any custom logic wrapped around it."
+  },
+  {
+    "id": 127,
+    "cert": "professional",
+    "domain": "Section 3: Model Deployment",
+    "question": "A model deployed to Databricks Model Serving returns predictions correctly but the p50 latency is 800ms for a simple tabular model. What are the most likely root causes and how do you diagnose them?",
+    "options": [
+      "800ms is normal for any deployed ML model — production models always have higher latency than development.",
+      "Likely causes: (1) Cold start — the endpoint scaled to zero and is loading the model on first request; check if scale-to-zero is enabled. (2) Instance type — CPU-only instance may be undersized for the model's inference compute. (3) Feature preprocessing in the model pyfunc is slow. Diagnose using Databricks endpoint serving logs, request traces, and profiling the model's predict() locally.",
+      "The 800ms latency is caused by MLflow's model format — convert to ONNX to reduce inference time.",
+      "The Delta Lake sink in the serving pipeline is causing the latency — move to an in-memory database."
+    ],
+    "answer": 1,
+    "explanation": "800ms p50 for a simple tabular model is unusually high. The main suspects: (1) Scale-to-zero cold start — the first request after idle pays container startup time; disable scale-to-zero or configure minimum replicas; (2) Undersized instance; (3) Slow preprocessing in the pyfunc wrapper (check with local profiling); (4) Network latency to the endpoint. Start by checking serving logs for cold-start indicators and profiling predict() locally."
+  }
+]

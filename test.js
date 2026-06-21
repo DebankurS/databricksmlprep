@@ -64,8 +64,8 @@ async function runTests() {
   const style = await get("/style.css");
   assert(style.status === 200, "GET /style.css returns 200");
 
-  const questions = await get("/questions.js");
-  assert(questions.status === 200, "GET /questions.js returns 200");
+  const questions = await get("/questions/associate1.json");
+  assert(questions.status === 200, "GET /questions/associate1.json returns 200");
 
   const notFound = await get("/nonexistent.txt");
   assert(notFound.status === 404, "GET /nonexistent.txt returns 404");
@@ -140,23 +140,17 @@ async function runTests() {
   // -----------------------------------------------------------------------
   console.log("\n--- Question Bank Integrity ---");
 
-  // Load questions file and evaluate in Node context
-  const questionsPath = path.join(__dirname, "public/questions.js");
-  assert(fs.existsSync(questionsPath), "questions.js file exists");
-
-  let PRACTICE_QUESTIONS;
-  try {
-    // Strip window.PRACTICE_QUESTIONS = ... and evaluate the module.exports form
-    const raw = fs.readFileSync(questionsPath, "utf8");
-    // Remove the browser export line
-    const nodeCompatible = raw.replace(/^window\.PRACTICE_QUESTIONS\s*=\s*PRACTICE_QUESTIONS;/m, "");
-    const mod = {};
-    eval(nodeCompatible + "\nmod.exports = module.exports;");
-    PRACTICE_QUESTIONS = mod.exports.PRACTICE_QUESTIONS;
-  } catch (e) {
-    assert(false, `questions.js parses without error: ${e.message}`);
-    PRACTICE_QUESTIONS = [];
-  }
+  const PRACTICE_QUESTIONS = [
+    ...JSON.parse(fs.readFileSync(path.join(__dirname, 'public/questions/associate1.json'), 'utf8')),
+    ...JSON.parse(fs.readFileSync(path.join(__dirname, 'public/questions/associate2.json'), 'utf8')),
+    ...JSON.parse(fs.readFileSync(path.join(__dirname, 'public/questions/associate3.json'), 'utf8')),
+    ...JSON.parse(fs.readFileSync(path.join(__dirname, 'public/questions/associate4.json'), 'utf8')),
+    ...JSON.parse(fs.readFileSync(path.join(__dirname, 'public/questions/associate5.json'), 'utf8')),
+    ...JSON.parse(fs.readFileSync(path.join(__dirname, 'public/questions/professional1.json'), 'utf8')),
+    ...JSON.parse(fs.readFileSync(path.join(__dirname, 'public/questions/professional2.json'), 'utf8')),
+    ...JSON.parse(fs.readFileSync(path.join(__dirname, 'public/questions/professional3.json'), 'utf8')),
+    ...JSON.parse(fs.readFileSync(path.join(__dirname, 'public/questions/professional4.json'), 'utf8')),
+  ];
 
   assert(Array.isArray(PRACTICE_QUESTIONS), "PRACTICE_QUESTIONS is an array");
   assert(PRACTICE_QUESTIONS.length === 71, `Total questions === 71 (got ${PRACTICE_QUESTIONS.length})`);

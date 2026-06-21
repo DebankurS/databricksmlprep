@@ -1,0 +1,128 @@
+[
+  {
+    "id": 101,
+    "cert": "professional",
+    "domain": "Section 1: Experimentation",
+    "question": "You are engineering features from a time-series dataset. Your label is customer churn in month T. Feature candidates include account balance, login frequency, and support tickets — all measured monthly. What is the critical issue to verify before using these features, and how do you fix it?",
+    "options": [
+      "All time-series features introduce multicollinearity; use PCA to remove correlated signals.",
+      "Features measured at or after month T may introduce data leakage: the model would see future information not available at prediction time. Use only feature values from months T-1 and earlier; use Feature Store point-in-time lookups to enforce this cutoff.",
+      "Time-series features require differencing (subtracting previous values) before they can be used in any supervised ML model.",
+      "Time-series features should be aggregated using exponential smoothing before being included in a feature vector."
+    ],
+    "answer": 1,
+    "explanation": "Data leakage from time is the critical issue. If features measured in month T (the same month as the label) are included, the model trains on information that would not be available at real prediction time. The fix: use only features from T-1 or earlier. Databricks Feature Store's point-in-time lookup enforces this cutoff automatically when feature tables have a timestamp column."
+  },
+  {
+    "id": 102,
+    "cert": "professional",
+    "domain": "Section 1: Experimentation",
+    "question": "A team wants to reproduce an experiment run from 3 months ago exactly — same data snapshot, same code, same parameters. What Databricks and MLflow mechanisms enable full reproducibility?",
+    "options": [
+      "MLflow logs are immutable; simply load the model artifact and re-run .predict() on current data.",
+      "Use Delta Lake time travel (`VERSION AS OF` or `TIMESTAMP AS OF`) to retrieve the exact data snapshot used at training time, combine with the MLflow run's logged parameters and linked source code commit (from Databricks Repos), and re-run the experiment notebook.",
+      "Store the training dataset as a CSV artifact in the MLflow run and load it for re-training.",
+      "Pin the cluster's Databricks Runtime version and re-run the notebook — the ML Runtime ensures identical library versions across runs."
+    ],
+    "answer": 1,
+    "explanation": "Full reproducibility requires: (1) Delta Lake time travel to get the exact data version at training time (MLflow can log the Delta table version); (2) MLflow-logged parameters and metrics; (3) Git commit hash (MLflow logs `mlflow.source.git.commit` when running in Databricks Repos). Runtime pinning helps but is insufficient alone — data drift across re-queries is the primary reproducibility threat."
+  },
+  {
+    "id": 103,
+    "cert": "professional",
+    "domain": "Section 1: Experimentation",
+    "question": "You are running a hyperparameter search with 200 trials using Hyperopt and SparkTrials. You want to compare groups of trials (e.g., trials with different model architectures) as nested experiments. How should you structure MLflow logging to enable this?",
+    "options": [
+      "Create a separate MLflow experiment for each model architecture and merge results post-hoc using mlflow.search_runs across multiple experiments.",
+      "Use MLflow nested runs: start a parent run for each architecture group with `mlflow.start_run()`, then use `with mlflow.start_run(nested=True):` inside the objective function for each individual trial. This creates a tree structure in the UI.",
+      "Log an 'architecture' tag to every run using mlflow.set_tag() and filter runs by tag in the UI.",
+      "Use separate SparkTrials objects for each architecture and specify different experiment_id per object."
+    ],
+    "answer": 1,
+    "explanation": "MLflow nested runs create a parent-child hierarchy: one parent run per architecture group, child runs per individual trial. In the objective function passed to fmin(), use `with mlflow.start_run(nested=True):` to log each trial as a child of the active parent run. This creates a tree in the MLflow UI that makes it easy to compare architectures and inspect individual trials."
+  },
+  {
+    "id": 104,
+    "cert": "professional",
+    "domain": "Section 1: Experimentation",
+    "question": "You are using SHAP (SHapley Additive exPlanations) values for feature selection before training a production model. What does a SHAP value represent, and how should you use it for feature elimination?",
+    "options": [
+      "SHAP values represent the correlation coefficient between each feature and the target variable. Remove features with SHAP |correlation| < 0.05.",
+      "SHAP values represent each feature's marginal contribution to a specific prediction, averaged across all possible feature orderings. Use mean absolute SHAP values across the training set to rank feature importance, then eliminate features with consistently near-zero SHAP values.",
+      "SHAP values measure the variance explained by each feature in isolation. Remove features explaining less than 1% of variance.",
+      "SHAP values are only valid for tree-based models and cannot be used for feature selection in neural networks."
+    ],
+    "answer": 1,
+    "explanation": "A SHAP value for feature j in prediction i represents how much feature j contributed to pushing the prediction from the baseline (mean prediction) to the actual prediction for that sample. Mean |SHAP| across training samples gives a global feature importance that is model-agnostic and theoretically grounded. Features with mean |SHAP| ≈ 0 contribute nothing and can be safely removed."
+  },
+  {
+    "id": 105,
+    "cert": "professional",
+    "domain": "Section 1: Experimentation",
+    "question": "A data scientist wants to log a custom Python class as an MLflow model so it can be served via the pyfunc flavor. Which approach is correct?",
+    "options": [
+      "Subclass `mlflow.pyfunc.PythonModel` and implement the `predict(context, model_input)` method. Log it with `mlflow.pyfunc.log_model('model', python_model=MyCustomModel(), artifacts={...})`.  ",
+      "Pickle the custom class with `pickle.dump()` and log the pickle file as an artifact using `mlflow.log_artifact()`.",
+      "Implement a `__call__` method in the class and log it with `mlflow.sklearn.log_model()`.",
+      "Register the class as a Spark UDF and log it with `mlflow.spark.log_model()`."
+    ],
+    "answer": 0,
+    "explanation": "To log a custom Python object as an MLflow pyfunc model, subclass mlflow.pyfunc.PythonModel and implement predict(context, model_input). The context provides access to artifacts (e.g., a serialized model file). Log with mlflow.pyfunc.log_model(), specifying the python_model instance and any artifacts (paths to serialized objects). This creates a standardized serving interface."
+  },
+  {
+    "id": 106,
+    "cert": "professional",
+    "domain": "Section 1: Experimentation",
+    "question": "You need to perform distributed hyperparameter optimization using Ray Tune on a Databricks cluster. How does Ray Tune compare to Hyperopt SparkTrials for Databricks-native integration?",
+    "options": [
+      "Ray Tune and Hyperopt SparkTrials are identical; both use the same Spark task scheduling backend.",
+      "Hyperopt SparkTrials is the native Databricks integration — it uses Spark tasks directly. Ray Tune requires setting up a Ray cluster separately (using ray.init() with the Spark cluster's head node address), adding operational overhead but providing more advanced scheduling algorithms (ASHA, PBT).",
+      "Ray Tune is the recommended tool for Databricks because it integrates with Databricks ML Runtime out-of-the-box with zero configuration.",
+      "Ray Tune can only be used with TensorFlow models; Hyperopt SparkTrials is required for scikit-learn."
+    ],
+    "answer": 1,
+    "explanation": "Hyperopt SparkTrials is the native path: it submits HPO trials as Spark tasks with no extra cluster configuration. Ray Tune requires launching a Ray cluster (ray.init()) before use, which adds complexity but offers scheduling algorithms like ASHA (early stopping for bad trials) and PBT (population-based training) not available in Hyperopt."
+  },
+  {
+    "id": 107,
+    "cert": "professional",
+    "domain": "Section 1: Experimentation",
+    "question": "A model trained on last year's data shows strong validation performance but degrades significantly in production after 2 months. What type of problem is this, and what is the long-term mitigation strategy?",
+    "options": [
+      "This is overfitting. Reduce model complexity and retrain with stronger regularization.",
+      "This is concept drift — the statistical relationship between features and the target has changed over time as real-world behavior evolves. Mitigate by implementing continuous model monitoring (tracking prediction distribution and model performance), and automating retraining triggers when drift is detected.",
+      "This is training-serving skew caused by different preprocessing in the training pipeline versus the serving pipeline.",
+      "This is label noise in the training data causing inconsistent model behavior under distribution shift."
+    ],
+    "answer": 1,
+    "explanation": "Concept drift occurs when the joint distribution P(Y|X) changes over time — the relationship between features and the target evolves (e.g., user behavior changes, economic conditions shift). The mitigation strategy is a monitoring pipeline that tracks feature distribution and prediction accuracy, combined with automated retraining triggers. This differs from data drift (P(X) changes) where only input distributions shift."
+  },
+  {
+    "id": 108,
+    "cert": "professional",
+    "domain": "Section 1: Experimentation",
+    "question": "You are comparing two feature engineering approaches: raw features vs. feature-crossed polynomial features. Validation AUC is 0.82 for raw and 0.85 for polynomial. What additional factors should you consider before selecting the polynomial approach?",
+    "options": [
+      "The polynomial approach is strictly better since it has higher AUC. Ship it.",
+      "Consider training time, inference latency, model size, risk of overfitting (especially if the polynomial expansion greatly increases dimensionality), and interpretability. Higher AUC on validation may not persist if the polynomial features overfit subtly — check performance on a holdout test set and monitor production metrics.",
+      "Check only the training AUC — if both models have similar training AUC, the polynomial approach overfits and should be rejected.",
+      "Run a paired t-test on cross-validation fold AUCs; if p < 0.05 the polynomial model is significantly better."
+    ],
+    "answer": 1,
+    "explanation": "AUC lift of 0.03 is real but the evaluation must be holistic: (1) Test set performance (not just validation) to check for validation overfitting; (2) Inference latency — polynomial features increase dimensionality; (3) Model size and serving cost; (4) Interpretability — polynomial features are harder to explain; (5) Production monitoring plan. Statistical significance testing (option D) is valid additional analysis but insufficient alone."
+  },
+  {
+    "id": 109,
+    "cert": "professional",
+    "domain": "Section 1: Experimentation",
+    "question": "You are designing an offline evaluation pipeline for a recommendation model. The evaluation metric is NDCG@10. What is a key challenge with offline evaluation of ranking models, and how do you address it?",
+    "options": [
+      "NDCG@10 cannot be computed offline; it requires a live A/B test to measure click-through rates.",
+      "Offline evaluation of ranking models suffers from exposure bias: the evaluation set only contains user interactions with items that were shown (historical policy), not items the new model might have ranked higher. Mitigate with counterfactual evaluation techniques (inverse propensity scoring) or caution offline metrics by always validating improvements with online A/B tests.",
+      "Offline ranking evaluation is only valid when the test set contains at least 1M user interactions.",
+      "NDCG@10 requires the full item catalog to be ranked for each user, making offline evaluation computationally infeasible at scale."
+    ],
+    "answer": 1,
+    "explanation": "Exposure bias is the fundamental offline evaluation challenge for ranking: historical data only records interactions with items the old model showed. A new model that would rank previously-unexposed relevant items highly cannot be rewarded by offline metrics. Inverse propensity scoring adjusts for this by reweighting observations, but the gold standard is online A/B testing with real user feedback."
+  }
+]

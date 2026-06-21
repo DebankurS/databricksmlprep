@@ -1,6 +1,31 @@
 // Databricks ML Certification Study Dashboard — Application Logic
 
 // =========================================================================
+// 0. QUESTIONS LOADER
+// =========================================================================
+
+async function loadQuestions() {
+  const files = [
+    'questions/associate1.json',
+    'questions/associate2.json',
+    'questions/associate3.json',
+    'questions/associate4.json',
+    'questions/associate5.json',
+    'questions/professional1.json',
+    'questions/professional2.json',
+    'questions/professional3.json',
+    'questions/professional4.json'
+  ];
+  const results = await Promise.all(
+    files.map(f => fetch(f).then(r => {
+      if (!r.ok) throw new Error(`Failed to load ${f}: ${r.status}`);
+      return r.json();
+    }))
+  );
+  window.PRACTICE_QUESTIONS = results.flat();
+}
+
+// =========================================================================
 // 1. CERT DATA CONSTANTS
 // =========================================================================
 
@@ -723,6 +748,7 @@ async function saveProgress() {
 // =========================================================================
 document.addEventListener("DOMContentLoaded", async () => {
   initTheme();
+  await loadQuestions();
   await loadProgress();
   initTrackerState();
   renderChecklist();

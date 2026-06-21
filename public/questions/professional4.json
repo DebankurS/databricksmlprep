@@ -1,0 +1,128 @@
+[
+  {
+    "id": 128,
+    "cert": "professional",
+    "domain": "Section 4: Solution & Data Monitoring",
+    "question": "A production churn model's false negative rate has increased from 15% to 35% over 6 months without any model change. What type of drift is most likely occurring, and how do you confirm it?",
+    "options": [
+      "This is software drift — a Databricks Runtime upgrade changed the model's behavior. Roll back the runtime version.",
+      "This is likely concept drift (P(Y|X) changed) or data drift (P(X) changed), or both. Confirm by: (1) comparing the distribution of input features in current production data vs. training data (data drift); (2) if you have ground-truth labels with delay, compute model accuracy on labeled production samples and compare to validation baseline (concept drift). Use Databricks Lakehouse Monitoring to automate these distribution comparisons.",
+      "This is label drift — the definition of 'churned' changed in the data warehouse. Re-label training data.",
+      "False negative rate increase always indicates overfitting — retrain with stronger L2 regularization."
+    ],
+    "answer": 1,
+    "explanation": "Unexplained performance degradation without code changes is the signature of drift. Data drift (input feature distributions shifted) or concept drift (the feature-label relationship changed) are the prime suspects. Diagnosis: compute PSI/KL divergence on feature distributions vs. training baseline (data drift), and compute delayed-label accuracy on production samples (concept drift). Databricks Lakehouse Monitoring automates distribution tracking on Delta tables."
+  },
+  {
+    "id": 129,
+    "cert": "professional",
+    "domain": "Section 4: Solution & Data Monitoring",
+    "question": "You are setting up Databricks Lakehouse Monitoring on a Delta table that stores model predictions. What does Lakehouse Monitoring automatically compute, and how is it surfaced?",
+    "options": [
+      "Lakehouse Monitoring trains a monitoring model that detects anomalies in the prediction column using unsupervised learning.",
+      "Lakehouse Monitoring automatically computes statistical profiles (mean, stddev, null rates, quantiles, data type distributions) and drift metrics (compared to a baseline window) on the monitored Delta table's columns. Results are written to companion Delta tables (profile metrics and drift metrics) and surfaced in a pre-built Databricks SQL monitoring dashboard.",
+      "Lakehouse Monitoring integrates with Grafana to push monitoring metrics in real-time to external observability platforms.",
+      "Lakehouse Monitoring only monitors schema changes (column additions/deletions), not value distributions."
+    ],
+    "answer": 1,
+    "explanation": "Databricks Lakehouse Monitoring (as of DBR 12.2+) profiles Delta table columns: statistical summaries and drift comparisons vs. a baseline window. It writes results to profile_metrics and drift_metrics Delta tables and generates a pre-built DBSQL dashboard. You can set alert thresholds on drift metrics to trigger retraining pipelines or notifications."
+  },
+  {
+    "id": 130,
+    "cert": "professional",
+    "domain": "Section 4: Solution & Data Monitoring",
+    "question": "What is Population Stability Index (PSI) and when is it used in ML monitoring?",
+    "options": [
+      "PSI is a model evaluation metric for classification tasks, equivalent to F1-score.",
+      "PSI is a statistical measure of how much a feature's distribution has shifted between the training baseline and current production data. PSI < 0.1 indicates no significant shift, 0.1–0.2 moderate shift, > 0.2 significant shift requiring investigation. It is used to detect data drift in continuous and categorical features.",
+      "PSI measures the stability of gradient descent convergence — high PSI means the optimizer is stuck in a local minimum.",
+      "PSI is a prediction interval metric that quantifies model uncertainty at a per-sample level."
+    ],
+    "answer": 1,
+    "explanation": "Population Stability Index (PSI) quantifies distributional shift between two populations (baseline vs. current). Formula: PSI = Σ (P_current - P_expected) × ln(P_current / P_expected) over bins. Thresholds: <0.1 stable, 0.1-0.25 slight shift (monitor), >0.25 major shift (investigate and retrain). Widely used in financial ML and production monitoring for detecting feature drift."
+  },
+  {
+    "id": 131,
+    "cert": "professional",
+    "domain": "Section 4: Solution & Data Monitoring",
+    "question": "You want to automate model retraining when data drift is detected. Design the end-to-end monitoring and retraining pipeline on Databricks.",
+    "options": [
+      "Train the model to be robust to distribution shift using adversarial training; retraining is never needed.",
+      "Pipeline: (1) Lakehouse Monitoring computes PSI on prediction and feature distributions daily; (2) A DBSQL Alert triggers when PSI > 0.25 on any monitored feature; (3) Alert fires a webhook to a Databricks Job that runs the full training pipeline with fresh data; (4) The training job registers the new model version in the Model Registry; (5) An automated validation job evaluates the new version and promotes to Production if metrics pass.",
+      "Set a calendar-based retraining schedule (every month regardless of drift) using a Databricks Job scheduled trigger.",
+      "Use AutoML triggered retraining — AutoML monitors its own experiments and retrains automatically when a new best model is found."
+    ],
+    "answer": 1,
+    "explanation": "The event-driven retraining pipeline: Monitoring (Lakehouse Monitoring or custom drift job) → Alert on threshold breach → Trigger training job → Evaluate new model → Auto-promote if validation passes. This is superior to calendar-based retraining (option C) because it retriggers only when needed (reducing compute cost) and more timely than waiting for a scheduled date."
+  },
+  {
+    "id": 132,
+    "cert": "professional",
+    "domain": "Section 4: Solution & Data Monitoring",
+    "question": "Your team needs to detect when the model's prediction distribution shifts significantly — not just input features. For example, if the churn prediction rate suddenly changes from 5% to 25%. What monitoring approach handles this?",
+    "options": [
+      "Monitor input feature drift only — prediction distribution shifts are always caused by input feature changes.",
+      "Monitor the prediction column distribution directly using Lakehouse Monitoring or a custom monitoring job: track the mean/distribution of the prediction column (and probability scores) over rolling windows and compare to a baseline. A sudden shift in predicted churn rate from 5% to 25% triggers an alert even if individual features haven't changed significantly.",
+      "Use MLflow's built-in prediction monitoring dashboard, which tracks prediction distributions automatically for all registered models.",
+      "Set a business rule alert in Databricks SQL: if daily predicted churn count > 2x the 30-day average, send an alert."
+    ],
+    "answer": 1,
+    "explanation": "Monitoring the prediction distribution (output drift) is a critical supplement to input feature monitoring. A sudden shift in predicted positive rate (churn from 5% → 25%) is a strong signal of either input drift, concept drift, or a data pipeline bug — even if no individual feature shows significant PSI. Lakehouse Monitoring can monitor the prediction column as just another feature column. Option D (business rule) is a valid complementary alert but less statistically rigorous."
+  },
+  {
+    "id": 133,
+    "cert": "professional",
+    "domain": "Section 4: Solution & Data Monitoring",
+    "question": "You want to validate a new model in production without exposing all users to it. Describe how to implement a shadow deployment (dark launch) on Databricks Model Serving, and when you would graduate the shadow model to champion.",
+    "options": [
+      "Shadow deployment is not supported on Databricks Model Serving — use A/B testing instead, which exposes a random 10% of traffic to the challenger model.",
+      "In a shadow deployment, the current champion model serves all live traffic and returns responses to users. Simultaneously, all requests are mirrored to the challenger model, whose predictions are logged but never returned to users. On Databricks, implement this via a wrapper endpoint or a DLT/Structured Streaming pipeline that duplicates prediction requests to both models, logging both outputs to Delta. Graduate the challenger to champion when its offline metrics on logged shadow predictions match or exceed the champion's.",
+      "Shadow mode means deploying the new model behind a feature flag only for internal employees before a general rollout.",
+      "Use MLflow's A/B testing API to route 0% traffic to the challenger — this creates a shadow deployment automatically."
+    ],
+    "answer": 1,
+    "explanation": "Shadow (dark launch) deployment: all user traffic is served by the champion; requests are also sent to the challenger, but only the champion's response is returned. The challenger's outputs are logged for offline comparison. This is zero-risk validation of challenger inference speed, output distribution, and error rate under real production load. Graduate when champion and challenger metrics converge or challenger wins on held-out shadow logs."
+  },
+  {
+    "id": 134,
+    "cert": "professional",
+    "domain": "Section 4: Solution & Data Monitoring",
+    "question": "Your team runs an A/B test between a champion and challenger model for 2 weeks. The challenger shows a 3% lift in conversion on the test cohort. How do you determine if this lift is statistically significant before promoting the challenger?",
+    "options": [
+      "3% lift is always significant — promote the challenger immediately.",
+      "Run a two-proportion z-test (or chi-squared test for binary outcomes) on the conversion rates of the control and treatment groups. Compute the p-value; if p < 0.05 (or your chosen significance threshold), the lift is statistically significant. Also check practical significance: is 3% lift large enough to justify the operational cost of switching models? Consider running the test longer if the sample size is insufficient for the desired statistical power.",
+      "Compare average conversion rates between groups using a paired t-test on daily cohort averages, then promote if the t-statistic exceeds 1.0.",
+      "Statistical significance testing is unnecessary for model A/B tests — use business intuition to decide if 3% is meaningful."
+    ],
+    "answer": 1,
+    "explanation": "For binary outcomes (converted/not), a two-proportion z-test or chi-squared test is appropriate. Key concepts: (1) null hypothesis: champion and challenger have equal conversion rates; (2) p-value < 0.05 → reject null, lift is statistically significant; (3) statistical power (≥0.8) requires sufficient sample size — compute minimum sample size before starting; (4) also assess practical significance: a statistically significant but tiny lift may not justify deployment overhead."
+  },
+  {
+    "id": 135,
+    "cert": "professional",
+    "domain": "Section 4: Solution & Data Monitoring",
+    "question": "A compliance team requires that your production ML model provide explanations for individual predictions flagged for manual review. How do you serve per-prediction explanations at inference time on Databricks?",
+    "options": [
+      "Explanations cannot be served at inference time — run SHAP analysis offline in batch as a separate job after predictions are made.",
+      "Wrap the model in a custom MLflow PythonModel that computes SHAP values (using shap.Explainer) for each prediction at inference time and returns both the prediction and a feature attribution dict. Register this explainable wrapper in the Model Registry and deploy it to Databricks Model Serving. For latency-sensitive endpoints, precompute SHAP background datasets and use TreeExplainer (for tree models) or a fast approximation (shap.LinearExplainer) to minimize overhead.",
+      "Use Feature Store's built-in explanation API — it automatically generates SHAP values for any model that reads from the Feature Store.",
+      "Set model_explainability=True in the MLflow autolog call; MLflow will automatically add SHAP values to all prediction responses."
+    ],
+    "answer": 1,
+    "explanation": "Serving per-prediction explanations: wrap the model as a custom MLflow PythonModel whose predict() method returns {prediction, shap_values, feature_names}. Use shap.TreeExplainer for gradient boosting/random forest (fast), shap.LinearExplainer for linear models, or shap.KernelExplainer as a model-agnostic fallback (slow — avoid at inference time). Deploy to Model Serving. For high-throughput endpoints, consider async explanation jobs triggered by prediction IDs rather than synchronous computation."
+  },
+  {
+    "id": 136,
+    "cert": "professional",
+    "domain": "Section 4: Solution & Data Monitoring",
+    "question": "You need to set up alerting for a production model so that on-call engineers are notified when model quality degrades. What are the key metrics to alert on, and how do you implement alerting on Databricks?",
+    "options": [
+      "Alert only on infrastructure metrics (CPU, memory, GPU utilization) — model quality metrics are too noisy for operational alerts.",
+      "Alert on a combination of: (1) data drift metrics (PSI > 0.25 on key features, monitored via Lakehouse Monitoring drift_metrics table); (2) output drift (prediction distribution shift > threshold); (3) delayed-label quality metrics (accuracy/AUC drop > X% vs. baseline, when ground truth is available); (4) pipeline health (null rate spike, record count drop). Implement via DBSQL Alerts querying the Lakehouse Monitoring Delta tables — configure alerts to trigger webhooks to PagerDuty/Slack, or use Databricks notification destinations.",
+      "Use MLflow's built-in alerting module to set thresholds on logged metrics — it automatically pages on-call when a metric degrades.",
+      "Monitor only latency (p95 response time) and error rate from the Model Serving endpoint — these proxy model quality without needing labels."
+    ],
+    "answer": 1,
+    "explanation": "Production ML alerting requires multiple signal types: (a) data health signals (null rates, row counts, schema changes); (b) distribution signals (PSI/drift on inputs and outputs); (c) quality signals (accuracy/AUC on delayed labels, when available); (d) serving health (latency, error rate). Databricks implementation: Lakehouse Monitoring writes to Delta tables → DBSQL Alert queries those tables on schedule → alert fires webhook to PagerDuty/Slack or uses a Databricks notification destination to trigger a retraining job."
+  }
+]

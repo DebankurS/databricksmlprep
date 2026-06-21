@@ -1,0 +1,114 @@
+[
+  {
+    "id": 15,
+    "cert": "associate",
+    "domain": "Section 3: Spark ML",
+    "question": "You are building a Spark ML Pipeline with the following stages: VectorAssembler, StringIndexer, and LogisticRegression. In what order should these stages be arranged, and why?",
+    "options": [
+      "LogisticRegression → VectorAssembler → StringIndexer, because the estimator must initialize before transformers.",
+      "StringIndexer → VectorAssembler → LogisticRegression, because StringIndexer converts strings to numeric indices, VectorAssembler then combines all numeric features into a feature vector, and LogisticRegression trains on the assembled vector.",
+      "VectorAssembler → StringIndexer → LogisticRegression, because vectors must be assembled before indexing.",
+      "The order does not matter — Spark ML Pipeline infers dependencies automatically."
+    ],
+    "answer": 1,
+    "explanation": "The correct order is: StringIndexer (converts string columns to numeric indices) → VectorAssembler (combines all numeric feature columns into a single dense vector) → LogisticRegression (trains on the assembled feature vector). Transformers run in sequence; each stage's output feeds the next stage."
+  },
+  {
+    "id": 16,
+    "cert": "associate",
+    "domain": "Section 3: Spark ML",
+    "question": "In Spark ML, what is the difference between a Transformer and an Estimator?",
+    "options": [
+      "A Transformer stores model weights; an Estimator provides the evaluation metric computation.",
+      "A Transformer applies a transformation to a DataFrame and returns a new DataFrame (e.g., VectorAssembler, StandardScaler when already fitted). An Estimator learns from data via .fit() and returns a fitted Transformer (Model) — e.g., LogisticRegression is an Estimator that returns a LogisticRegressionModel.",
+      "A Transformer is used for feature engineering; an Estimator is used only for prediction.",
+      "An Estimator is a stateless operation; a Transformer stores learned parameters from training data."
+    ],
+    "answer": 1,
+    "explanation": "Transformer: has a .transform() method, stateless (or already fitted), returns a new DataFrame. Estimator: has a .fit() method, learns statistics from training data, and returns a fitted Transformer (Model). VectorAssembler is a Transformer; LogisticRegression is an Estimator that returns a LogisticRegressionModel (which is a Transformer)."
+  },
+  {
+    "id": 17,
+    "cert": "associate",
+    "domain": "Section 3: Spark ML",
+    "question": "What does `VectorAssembler` do in a Spark ML pipeline, and what does it return?",
+    "options": [
+      "It creates a sparse one-hot encoded representation of categorical features.",
+      "It combines multiple numeric or vector columns into a single DenseVector or SparseVector column (usually named 'features'), which is required as input by most Spark ML estimators.",
+      "It normalizes feature values to have zero mean and unit variance.",
+      "It selects the top N most important features by computing feature importances from a pre-trained model."
+    ],
+    "answer": 1,
+    "explanation": "VectorAssembler takes a list of input column names (numeric or vector) and concatenates them into a single vector column. Most Spark ML estimators (like LogisticRegression, GBTClassifier) expect a single 'features' vector column as input. VectorAssembler is what produces that column."
+  },
+  {
+    "id": 18,
+    "cert": "associate",
+    "domain": "Section 3: Spark ML",
+    "question": "After calling `pipeline.fit(train_df)`, which object is returned and what can you do with it?",
+    "options": [
+      "A new Pipeline object with updated hyperparameters from the training data.",
+      "A PipelineModel object that has fitted parameters for all Estimator stages. You can call `.transform(df)` on it to produce predictions on new data.",
+      "A dictionary of stage metrics including training accuracy and feature importances.",
+      "A Spark Job object representing the asynchronous fit operation."
+    ],
+    "answer": 1,
+    "explanation": "pipeline.fit(train_df) returns a PipelineModel — a fitted version of the pipeline where all Estimator stages have been replaced by their fitted Transformer (Model) counterparts. You call pipelineModel.transform(test_df) to apply all transformation and prediction stages to new data."
+  },
+  {
+    "id": 19,
+    "cert": "associate",
+    "domain": "Section 3: Spark ML",
+    "question": "You want to tune the `numTrees` and `maxDepth` hyperparameters of a `RandomForestClassifier` in a Spark ML pipeline using cross-validation. Which Spark ML components should you use?",
+    "options": [
+      "GridSearchCV from scikit-learn, wrapped in a Pandas UDF to parallelize across Spark workers.",
+      "ParamGridBuilder to define the hyperparameter grid, and CrossValidator (with the pipeline as the estimator and an evaluator) to perform k-fold cross-validation across all grid combinations.",
+      "Hyperopt with SparkTrials, which automatically integrates with Spark ML pipelines for distributed tuning.",
+      "mlflow.start_run() nested inside a Python for-loop over all hyperparameter combinations."
+    ],
+    "answer": 1,
+    "explanation": "The native Spark ML approach uses ParamGridBuilder to define the grid (e.g., numTrees in [20, 50, 100] and maxDepth in [3, 5, 8]) and CrossValidator to evaluate each combination. CrossValidator accepts the pipeline as its estimator, an evaluator (e.g., BinaryClassificationEvaluator), and the param grid, then performs k-fold cross-validation."
+  },
+  {
+    "id": 20,
+    "cert": "associate",
+    "domain": "Section 3: Spark ML",
+    "question": "A Spark ML pipeline produces predictions. The task is binary classification. Which evaluator should you use to compute AUC-ROC, and what is the correct call?",
+    "options": [
+      "`MulticlassClassificationEvaluator(metricName='accuracy')` — it handles binary classification by default.",
+      "`BinaryClassificationEvaluator(metricName='areaUnderROC', labelCol='label', rawPredictionCol='rawPrediction')` — this evaluator is specifically designed for binary classification metrics.",
+      "`RegressionEvaluator(metricName='rmse')` — ROC curves are computed from regression residuals.",
+      "`ClusteringEvaluator(metricName='silhouette')` — binary classification evaluates cluster separation."
+    ],
+    "answer": 1,
+    "explanation": "BinaryClassificationEvaluator computes AUC-ROC (areaUnderROC) or AUC-PR (areaUnderPR) for binary classification tasks. It reads from the rawPrediction column (model confidence scores), not the prediction column (hard labels). MulticlassClassificationEvaluator handles multi-class accuracy/F1 but not AUC-ROC."
+  },
+  {
+    "id": 21,
+    "cert": "associate",
+    "domain": "Section 3: Spark ML",
+    "question": "You have a trained Spark ML PipelineModel and want to save it to DBFS so it can be loaded later. What is the correct method?",
+    "options": [
+      "`pickle.dump(pipeline_model, open('/dbfs/models/pipeline.pkl', 'wb'))` — pickle works for Spark objects.",
+      "`pipeline_model.save('/dbfs/models/my_pipeline')` — Spark ML models have a built-in .save() method that persists the model to a distributed filesystem path.",
+      "`mlflow.spark.log_model(pipeline_model, 'model')` is the only supported way to persist Spark ML models.",
+      "`pipeline_model.write().overwrite().save('/dbfs/models/my_pipeline')` is required when a model already exists at the path."
+    ],
+    "answer": 3,
+    "explanation": "Both .save() and .write().overwrite().save() work, but .write().overwrite().save() is more robust because it handles the case where a model already exists at the destination path. .save() will throw an error if the path exists. Pickle does NOT work with Spark ML objects (they are not Python-picklable). mlflow.spark.log_model() also works but logs to MLflow, not saves to a path."
+  },
+  {
+    "id": 22,
+    "cert": "associate",
+    "domain": "Section 3: Spark ML",
+    "question": "You use `StringIndexer` on a `country` column during training. During inference, a new country value appears that was not in the training data. What happens by default, and how should you handle it?",
+    "options": [
+      "StringIndexer assigns a new index automatically for unseen labels and continues without error.",
+      "StringIndexer throws an error for unseen labels by default. Set `handleInvalid='keep'` to assign unseen labels to an extra index, or `handleInvalid='skip'` to drop those rows.",
+      "StringIndexer silently converts unseen labels to `null` values, which then propagate through the pipeline.",
+      "StringIndexer converts unseen labels to -1.0 by default, which models handle as a missing value indicator."
+    ],
+    "answer": 1,
+    "explanation": "By default, StringIndexer raises an exception when it encounters a label not seen during training (handleInvalid='error'). Set handleInvalid='keep' to assign unseen labels to an additional index (numLabels) — useful in production. Use handleInvalid='skip' to drop rows with unseen labels during transform."
+  }
+]

@@ -131,9 +131,8 @@ Test validates: HTTP status codes, all 9 doc files, 3 snippets, question schema 
 
 ## Keeping TODO.md current
 
-When completing any task listed in `TODO.md`, mark it done immediately:
-- Change `- [ ]` to `- [x]` for the completed item.
-- Do this in the same step as the fix — do not leave it for later.
+When completing any task listed in `TODO.md`, **delete the item** immediately — do not check it off or leave it marked `[x]`.
+- Delete in the same step as the fix — do not leave it for later.
 
 ---
 
